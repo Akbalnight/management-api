@@ -1,0 +1,15 @@
+databases:
+  db_auth:
+    driver: org.postgresql.Driver
+    url: jdbc:postgresql://db.hlaskute:5432/auth
+    username: postgres
+    password: jsadmin7
+  db_audit:
+    driver: org.postgresql.Driver
+    url: jdbc:postgresql://db.hlaskute:5432/auth
+    username: postgres
+    password: jsadmin7
+config:
+  auth: db_auth
+  audit: db_audit
+  main: db_auth

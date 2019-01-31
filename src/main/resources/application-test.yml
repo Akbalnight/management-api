@@ -1,0 +1,10 @@
+databases:
+  db_test:
+    driver: org.postgresql.Driver
+    url: jdbc:postgresql://db.hlaskute:5432/test-esb
+    username: postgres
+    password: jsadmin7
+config:
+  auth: db_test
+  audit: db_test
+  main: db_test
