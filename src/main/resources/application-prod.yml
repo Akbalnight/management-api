@@ -12,4 +12,3 @@ databases:
 config:
   auth: db_auth
   audit: db_audit
-  main: db_auth

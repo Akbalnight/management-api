@@ -2,8 +2,6 @@ package com.common.services.management.controllers;
 
 
 import com.common.services.management.beans.management.model.LdapGroup;
-import com.common.services.management.beans.management.model.LdapGroupGenerationObject;
-import com.common.services.management.beans.management.service.UsersDataService;
 import com.common.services.management.beans.management.service.UsersManagementService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -26,47 +24,6 @@ public class LdapController
 {
     @Autowired
     private UsersManagementService usersManagementService;
-    @Autowired
-    private UsersDataService usersDataService;
-
-    @ApiOperation(value = "Получение всех связей LDAP групп с объектами генерации")
-    @GetMapping(value = "/objects")
-    public List<LdapGroupGenerationObject> getGenerationObjects()
-    {
-        return usersDataService.getLdapGroupGenerationObjects();
-    }
-
-    @ApiOperation(value = "Получение LDAP группы, связанной с указанным объектом генерации")
-    @GetMapping(value = "/objects/{generationObjectId}")
-    public String getGroupByGenerationObjectId(@ApiParam(value = "Id объекта генерации", required = true) @PathVariable int generationObjectId)
-    {
-        return usersDataService.getLdapGroupByGenerationObjectId(generationObjectId);
-    }
-
-    @ApiOperation(value = "Получение id объекта генерации, связанного с указанной LDAP группой")
-    @GetMapping(value = "/groups/objects")
-    public int getGenerationObjectIdByGroup(@ApiParam(value = "Название LDAP группы", required = true) @RequestBody String group)
-    {
-        return usersDataService.getGenerationObjectIdByLdapGroup(group);
-    }
-
-    @PostMapping(value = "/groups/objects")
-    @ApiOperation(value = "Установка связи LDAP группы и объекта генерации")
-    public void setGenerationObjectIdToGroup(@ApiParam(value = "Название LDAP группы и id объекта генерации",
-            required = true) @RequestBody LdapGroupGenerationObject ldapGroupGenerationObject)
-    {
-        usersDataService.setGenerationObjectIdToLdapGroup(ldapGroupGenerationObject.getGroup(),
-                ldapGroupGenerationObject.getGenerationObjectId());
-    }
-
-    @DeleteMapping(value = "/groups/objects")
-    @ApiOperation(value = "Удаление связи объекта генерации с указанной LDAP группой")
-    public void removeGenerationObjectFromGroup(@ApiParam(value = "Название LDAP группы и id объекта генерации",
-            required = true) @RequestBody LdapGroupGenerationObject ldapGroupGenerationObject)
-    {
-        usersDataService.removeGenerationObjectFromLdapGroup(ldapGroupGenerationObject.getGroup(),
-                ldapGroupGenerationObject.getGenerationObjectId());
-    }
 
     /**
      * Возвращает список ролей, соответствующих указанной LDAP группе

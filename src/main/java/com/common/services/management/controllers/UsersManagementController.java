@@ -1,44 +1,21 @@
 package com.common.services.management.controllers;
 
-import static java.util.stream.Collectors.toList;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.common.services.management.beans.management.model.ChangePassword;
-import com.common.services.management.beans.management.model.LdapPermissions;
-import com.common.services.management.beans.management.model.Permission;
-import com.common.services.management.beans.management.model.PermissionIdList;
-import com.common.services.management.beans.management.model.Role;
-import com.common.services.management.beans.management.model.RoleNameList;
-import com.common.services.management.beans.management.model.User;
-import com.common.services.management.beans.management.model.UserGenerationObject;
+import com.common.services.management.beans.management.model.*;
 import com.common.services.management.beans.management.service.LdapService;
-import com.common.services.management.beans.management.service.UsersDataService;
 import com.common.services.management.beans.management.service.UsersManagementService;
 import com.common.services.management.beans.serv.exceptions.ServiceException;
 import com.common.services.management.beans.serv.resourcemanager.ResourceManager;
 import com.common.services.management.details.Details;
-import com.fasterxml.jackson.databind.JsonNode;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * UsersManagementController.java
@@ -59,9 +36,6 @@ public class UsersManagementController
     private UsersManagementService service;
 
     @Autowired
-    private UsersDataService serviceData;
-
-    @Autowired
     private ServiceException serviceException;
 
     @Autowired
@@ -77,7 +51,6 @@ public class UsersManagementController
     public User getUser(@ApiParam(value = "Id пользователя", required = true) @PathVariable("id") int id)
     {
         User user = service.getUser(id);
-        user.setObjects(serviceData.getUserObjects(id).stream().map(UserGenerationObject::getGenerationObjectId).collect(toList()));
         return user;
     }
 
@@ -445,21 +418,6 @@ public class UsersManagementController
         return service.getFullUserInfo(userId);
     }
 
-    @PostMapping(value = "/roles/{rolename}/objects")
-    @ApiOperation(value = "Указание объектов сервисов для роли")
-    public void addRoleServiceObjects(@ApiParam(value = "Название роли", required = true) @PathVariable String rolename,
-                                       @ApiParam(value = "Список сервисов и их объектов", required = true) @RequestBody Map<String, String> objects)
-    {
-        serviceData.setRoleObjects(rolename, objects);
-    }
-
-    @DeleteMapping(value = "/roles/{rolename}/objects")
-    @ApiOperation(value = "Удаление объектов сервисов у роли")
-    public void removeRoleServiceObjects(@ApiParam(value = "Название роли", required = true) @PathVariable String rolename)
-    {
-        serviceData.removeRoleObjects(rolename);
-    }
-
     @PostMapping(value = "/synchronizeldap")
     @ApiOperation(value = "Синхронизация LDAP пользователей с БД")
     public void synchronizeLdap(@ApiParam(value = "Параметры подключения к LDAP", required = true) @RequestBody LdapPermissions ldap)
@@ -494,108 +452,5 @@ public class UsersManagementController
         }
 
         service.changeUserPassword(userId, changePasswordObject);
-    }
-
-    /**
-     * Добавляет обьекты для пользователя
-     * @param userId идентификатор пользователя
-     * @param objects список идентификаторов обьектов
-     */
-    @PostMapping(value = "/users/objects", params = "userid")
-    @ApiOperation(value = "Добавление объектов пользователя")
-    public void addUserObjects(
-            @ApiParam(value = "Идентификатор пользователя", required = true)
-            @RequestParam(value="userid", required = true) Integer userId,
-            @ApiParam(value = "Cписок идентификаторов обьектов", required = true)
-            @RequestBody(required = true) List<Integer> objects)
-    {
-        serviceData.addUserObjects(userId, objects);
-    }
-
-    /**
-     * Устанавливает объекты для пользователя
-     * @param userId идентификатор пользователя
-     * @param objects список идентификаторов объектов
-     */
-    @PutMapping(value = "/users/objects", params = "userid")
-    @ApiOperation(value = "Указание объектов пользователя", notes = "Все связи пользователя и объектов которых нет в списке будут удалены")
-    public void setUserObjects(
-            @ApiParam(value = "Идентификатор пользователя", required = true)
-            @RequestParam(value="userid", required = true) Integer userId,
-            @ApiParam(value = "Cписок идентификаторов обьектов", required = true)
-            @RequestBody(required = true) List<Integer> objects)
-    {
-        serviceData.setUserObjects(userId, objects);
-    }
-
-    /**
-     * Удаляет объекты пользователя
-     * @param userId идентификатор пользователя
-     */
-    @DeleteMapping(value = "/users/objects", params = "userid")
-    @ApiOperation(value = "Удаление объектов пользователя",notes = "Если список объектов не указан, то будут удалены все объекты пользователя")
-    public void removeUserObjects(
-            @ApiParam(value = "Идентификатор пользователя", required = true)
-            @RequestParam(value="userid", required = true) Integer userId,
-    @ApiParam(value = "Cписок идентификаторов обьектов", required = false)
-    @RequestBody(required = false) List<Integer> objects)
-    {
-        serviceData.removeUserObjects(userId, objects);
-    }
-
-    /**
-     * Возвращает объекты пользователя
-     */
-    @GetMapping(value = "/users/{id}/objects")
-    @ApiOperation(value = "Получение объектов пользователя")
-    public List<UserGenerationObject> getUserObjects(
-            @ApiParam(value = "Id пользователя", required = true) @PathVariable("id") int userId)
-    {
-        return serviceData.getUserObjects(userId);
-    }
-
-    /**
-     * Возвращает связь пользователя и объекта по id записи
-     */
-    @GetMapping(value = "/users/objects/{rowid}")
-    @ApiOperation(value = "Получение связи пользователя и объекта по id записи")
-    public UserGenerationObject getUserObjectsByRowId(@ApiParam(value = "Id записи связи пользователя и объекта",
-            required = true) @PathVariable("rowid") int rowId)
-    {
-        return serviceData.getUserObjectByRowId(rowId);
-    }
-
-    /**
-     * Обновляет связь пользователя и объекта по указанной id записи
-     */
-    @PostMapping(value = "/users/objects/{rowid}")
-    @ApiOperation(value = "Изменяет связь пользователя и объекта по id записи")
-    public void updateUserObjectByRowId(@ApiParam(value = "Id записи связи пользователя и объекта", required = true)
-                                          @PathVariable("rowid") int rowId, @ApiParam(value = "Связь пользователя и объекта", required = true)
-                                          @RequestBody UserGenerationObject userGenerationObject)
-    {
-        serviceData.updateUserObjectByRowId(rowId, userGenerationObject.getUserId(),
-                userGenerationObject.getGenerationObjectId());
-    }
-    
-    /**
-     * Возвращает настройки пользователя
-     */
-    @GetMapping(value = "/users/settings")
-    @ApiOperation(value = "Получение настроек пользователя")
-    public JsonNode getUserSettings()
-    {
-        return serviceData.getUserSettings();
-    }
-    
-    /**
-     * Сохраняет настройки пользователя
-     */
-    @PutMapping(value = "/users/settings")
-    @ApiOperation(value = "Сохраняет настройки пользователя")
-    public void setUserSettings(
-            @ApiParam(value = "Настройки пользователя", required = true) @RequestBody JsonNode settings)
-    {
-        serviceData.setUserSettings(settings);
     }
 }
