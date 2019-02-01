@@ -23,7 +23,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -43,19 +42,13 @@ public class ManagementApplicationTests
     @Before
     public void setUp() throws IOException
     {
-        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(
-            dataManagement.getDataSource("audit"));
+        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataManagement.getDataSource("audit"));
         // Создание таблиц в БД
         executeScript(jdbcTemplate, "/db_audit_delete_tables.sql");
         executeScript(jdbcTemplate, "/db_audit_create_tables.sql");
         executeScript(jdbcTemplate, "/db_audit_fill_test_tables.sql");
-        
-        jdbcTemplate = new NamedParameterJdbcTemplate(
-            dataManagement.getDataSource("main"));
-        executeScript(jdbcTemplate, "/db_applied_data_create_tables.sql");
-        jdbcTemplate.getJdbcTemplate().execute("delete from notifications_data");
     }
-    
+
     /**
      * Выполнить SQL скрипт
      * @param jdbcTemplate соединение с базой
@@ -324,92 +317,5 @@ public class ManagementApplicationTests
                 +    "[\"CURRDATE CURRHOUR:50:10.001\",\"user3\",\"SESSION3\",\"R\",\"{\\\"code\\\":404,\\\"json\\\":{},\\\"requestJson\\\":{\\\"time\\\":\\\"CURRDATE CURRHOUR:50:10.000\\\",\\\"adress\\\":\\\"0:0:0:0:0:0:0:1\\\",\\\"method\\\":\\\"GET\\\",\\\"path\\\":\\\"path\\\"}}\"],"
                 +    "[\"CURRDATE CURRHOUR:50:20.001\",\"user3\",\"SESSION3\",\"R\",\"{\\\"code\\\":500,\\\"json\\\":{},\\\"requestJson\\\":{\\\"time\\\":\\\"CURRDATE CURRHOUR:50:20.000\\\",\\\"adress\\\":\\\"0:0:0:0:0:0:0:1\\\",\\\"method\\\":\\\"GET\\\",\\\"path\\\":\\\"path\\\"}}\"]],"
                 + "\"countRows\":4}")));
-        
-        // Изменим настройки пользователя
-        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(
-            dataManagement.getDataSource("main"));
-        jdbcTemplate.getJdbcOperations().update("insert "
-            + "into user_settings "
-            +   "(user_id, settings) "
-            +   "values(0, cast('{\"page\":{\"size\":2}}' as json))");
-        
-        // Получим лист запросов ответов
-        mvc.perform(get("/audit/list")
-            .header("userid", "0")
-            .contentType(MediaType.APPLICATION_JSON).characterEncoding("UTF-8"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(toCurrentDate("{\"headers\":[\"time\",\"user\",\"sessionid\",\"rq\",\"data\"],"
-                + "\"rows\":["
-                +    "[\"CURRDATE CURRHOUR:00:00.0\",\"user1\",\"SESSION1\",\"Q\",\"{\\\"adress\\\":\\\"0:0:0:0:0:0:0:1\\\",\\\"method\\\":\\\"GET\\\",\\\"path\\\":\\\"path\\\",\\\"params\\\":{},\\\"json\\\":null}\"],"
-                +    "[\"CURRDATE CURRHOUR:00:00.001\",\"user1\",\"SESSION1\",\"R\",\"{\\\"code\\\":200,\\\"json\\\":[],\\\"requestJson\\\":{\\\"time\\\":\\\"CURRDATE CURRHOUR:00:00.000\\\",\\\"adress\\\":\\\"0:0:0:0:0:0:0:1\\\",\\\"method\\\":\\\"GET\\\",\\\"path\\\":\\\"path\\\"}}\"]],"
-                + "\"countRows\":12}")));
-        
-        // Получим лист запросов
-        mvc.perform(get("/audit/requests")
-            .header("userid", "0")
-            .contentType(MediaType.APPLICATION_JSON).characterEncoding("UTF-8"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(toCurrentDate("{\"headers\":[\"timereq\",\"timeres\",\"userid\",\"sessionid\",\"method\",\"path\",\"status\"],"
-                + "\"rows\":["
-                +    "[\"CURRDATE CURRHOUR:00:00.000\",\"CURRDATE CURRHOUR:00:00.001\",\"2\",\"SESSION1\",\"GET\",\"path\",\"200\"],"
-                +    "[\"CURRDATE CURRHOUR:40:00.000\",\"CURRDATE CURRHOUR:40:00.001\",\"3\",\"SESSION2\",\"GET\",\"path\",\"404\"]],"
-                + "\"countRows\":6}")));
-    }
-    
-    @Test
-    public void dataTest() throws Exception
-    {
-        // Получим пустой список
-        mvc.perform(get("/data/notifications")
-            .contentType(MediaType.APPLICATION_JSON).characterEncoding("UTF-8"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-            .andExpect(content().json("{}"));
-
-        // Добавим данные
-        mvc.perform(put("/data/notifications/0")
-            .content("[\"notification0\",\"mailtitle0\",\"mailbody0\",\"{\\\"receivers\\\":{\\\"reseivers\\\":[0,1]}}\"]")
-            .contentType(MediaType.APPLICATION_JSON).characterEncoding("UTF-8"))
-            .andExpect(status().isOk());
-        
-        // Получим список с добавленой строкой
-        mvc.perform(get("/data/notifications")
-            .contentType(MediaType.APPLICATION_JSON).characterEncoding("UTF-8"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(
-                "{\"0\":[\"notification0\",\"mailtitle0\",\"mailbody0\",\"{\\\"receivers\\\":{\\\"reseivers\\\":[0,1]}}\"]}"));
-        
-        // Добавим данные
-        mvc.perform(put("/data/notifications/1")
-            .content("[\"notification1\",\"mailtitle1\",\"mailbody1\",\"{\\\"receivers\\\":{\\\"roles\\\":[\\\"ROLE_USER\\\"]}}\"]")
-            .contentType(MediaType.APPLICATION_JSON).characterEncoding("UTF-8"))
-            .andExpect(status().isOk());
-        
-        // Получим список с добавленой строкой
-        mvc.perform(get("/data/notifications")
-            .contentType(MediaType.APPLICATION_JSON).characterEncoding("UTF-8"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(
-                "{\"0\":[\"notification0\",\"mailtitle0\",\"mailbody0\",\"{\\\"receivers\\\":{\\\"reseivers\\\":[0,1]}}\"],"
-               + "\"1\":[\"notification1\",\"mailtitle1\",\"mailbody1\",\"{\\\"receivers\\\":{\\\"roles\\\":[\\\"ROLE_USER\\\"]}}\"]}"));
-        
-        // Изменим данные
-        mvc.perform(put("/data/notifications/0")
-            .content("[\"notification2\",\"mailtitle2\",\"mailbody2\",\"{\\\"receivers\\\":{\\\"reseivers\\\":[1,2]}}\"]")
-            .contentType(MediaType.APPLICATION_JSON).characterEncoding("UTF-8"))
-            .andExpect(status().isOk());
-        
-        // Получим список с измененой строкой
-        mvc.perform(get("/data/notifications")
-            .contentType(MediaType.APPLICATION_JSON).characterEncoding("UTF-8"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(
-                "{\"0\":[\"notification2\",\"mailtitle2\",\"mailbody2\",\"{\\\"receivers\\\":{\\\"reseivers\\\":[1,2]}}\"],"
-               + "\"1\":[\"notification1\",\"mailtitle1\",\"mailbody1\",\"{\\\"receivers\\\":{\\\"roles\\\":[\\\"ROLE_USER\\\"]}}\"]}"));
     }
 }
