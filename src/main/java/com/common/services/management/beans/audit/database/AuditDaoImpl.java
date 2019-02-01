@@ -50,7 +50,7 @@ public class AuditDaoImpl
     /**
      * SQL для проверки существования таблицы audit в БД
      */
-    private static final String SQL_VALIDATE_AUDIT = "SELECT sessionid FROM audit";
+    private static final String SQL_VALIDATE_AUDIT = "SELECT sessionid FROM audit LIMIT 1";
     /**
      * Параметры для SQL получения данных по аудиту
      */

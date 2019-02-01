@@ -19,20 +19,8 @@ public class User
     private String email;
     private Map<String, Object> jsonData;
     private List<Role> roles = Collections.emptyList();
-    // Список объектов пользователя
-    private List<Integer> objects = Collections.emptyList();
     // Флаг является ли пользователь LDAP пользователем
     private Boolean ldap;
-
-    public List<Integer> getObjects()
-    {
-        return objects;
-    }
-
-    public void setObjects(List<Integer> objects)
-    {
-        this.objects = objects;
-    }
 
     public Boolean getLdap()
     {
