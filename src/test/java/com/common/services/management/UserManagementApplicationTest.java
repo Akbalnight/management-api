@@ -2,7 +2,6 @@ package com.common.services.management;
 
 import com.common.services.management.beans.management.model.*;
 import com.common.services.management.datasource.DataSourceManager;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,9 +40,6 @@ public class UserManagementApplicationTest
     private final static String TABLE_PERMISSIONS = "permissions";
     private final static String TABLE_USER_ROLES = "user_roles";
     private final static String TABLE_ROLE_PERMISSIONS = "role_permissions";
-    private final static String TABLE_USER_OBJECTS = "user_generation_object";
-    private final static String TABLE_ROLE_OBJECTS = "role_objects";
-    private final static String TABLE_USER_SETTINGS = "user_settings";
     private final static String TABLE_LDAP_GROUP_ROLES = "ldap_roles";
     private final static String UTF8 = "UTF-8";
 
@@ -459,175 +455,6 @@ public class UserManagementApplicationTest
                 json("[]"));
         assertEquals("Удаление связи пермиссии и роли", 0, JdbcTestUtils.countRowsInTable(jdbcTemplate,
                 TABLE_USER_ROLES));
-    }
-
-    /**
-     * Тестирование API методов добавления/удаления объектов пользователей
-     * @throws Exception
-     */
-    @Test
-    public void testUserObjects() throws Exception
-    {
-        JdbcTestUtils.deleteFromTables(jdbcTemplate, TABLE_USERS);
-        JdbcTestUtils.deleteFromTables(jdbcTemplate, TABLE_USER_OBJECTS);
-
-        User user = getTestUser();
-        String json = jsonMapper.writeValueAsString(user);
-        // Добавление User
-        String userId =
-                mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        // User добавлен в базу
-        assertEquals("Добавление пользователя", 1, JdbcTestUtils.countRowsInTable(jdbcTemplate, TABLE_USERS));
-
-        // Получение User
-        user.setId(Integer.parseInt(userId));
-        user.setPassword(null);
-        json = jsonMapper.writeValueAsString(user);
-        mockMvc.perform(get("/users/" + userId)).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().json(json));
-
-        // Добавление объектов пользователя
-        List<Integer> objects = new ArrayList<>();
-        objects.add(1);
-        objects.add(2);
-        json = jsonMapper.writeValueAsString(objects);
-        mockMvc.perform(post("/users/objects").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("userid", userId)).andExpect(status().isOk());
-        // Объекты добавлены в базу
-        assertEquals("Добавление объектов пользователя", 2, JdbcTestUtils.countRowsInTable(jdbcTemplate,
-                TABLE_USER_OBJECTS));
-
-        // Получение информации о пользователе с его объектами
-        user.setObjects(objects);
-        json = jsonMapper.writeValueAsString(user);
-        mockMvc.perform(get("/users/" + userId)).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
-                json(json));
-
-        // Указание объектов пользователя
-        objects = new ArrayList<>();
-        objects.add(2);
-        objects.add(3);
-        objects.add(4);
-        json = jsonMapper.writeValueAsString(objects);
-        mockMvc.perform(put("/users/objects").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("userid", userId)).andExpect(status().isOk());
-        // Объекты добавлены в базу
-        assertEquals("Указание объектов пользователя", 3, JdbcTestUtils.countRowsInTable(jdbcTemplate,
-                TABLE_USER_OBJECTS));
-
-        // Проверка указания объектов
-        user.setObjects(objects);
-        json = jsonMapper.writeValueAsString(user);
-        mockMvc.perform(get("/users/" + userId)).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
-                json(json));
-
-        // Получение объектов пользователя
-        String jsonResult = mockMvc.perform(get("/users/" + userId + "/objects")).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andReturn().getResponse().getContentAsString();
-        TypeReference<List<UserGenerationObject>> typeRef = new TypeReference<List<UserGenerationObject>>(){};
-        List<UserGenerationObject> userGenerationObjects = jsonMapper.readValue(jsonResult, typeRef);
-        compareUserGenerationObjects(user.getId(), objects, userGenerationObjects);
-
-        // Изменение связи пользователя и объекта по id записи
-        UserGenerationObject userGenerationObject = userGenerationObjects.get(0);
-        userGenerationObject.setGenerationObjectId(5);
-        json = jsonMapper.writeValueAsString(userGenerationObject);
-        mockMvc.perform(post("/users/objects/" + userGenerationObject.getId()).contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk());
-        assertEquals("Изменение связи пользователя и объекта по id записи", 3,
-                JdbcTestUtils.countRowsInTable(jdbcTemplate, TABLE_USER_OBJECTS));
-
-        // Получение связи пользователя и объекта по id записи
-        mockMvc.perform(get("/users/objects/" + userGenerationObject.getId())).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
-                json(json));
-
-        // Удаление объектов пользователя
-        mockMvc.perform(delete("/users/objects").param("userid", userId)).andExpect(status().isOk());
-
-        // Проверка удаления
-        user.setObjects(Collections.emptyList());
-        json = jsonMapper.writeValueAsString(user);
-        mockMvc.perform(get("/users/" + userId)).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().json(json));
-        // Объекты удалены
-        assertEquals("Удаление объектов пользователя", 0, JdbcTestUtils.countRowsInTable(jdbcTemplate,
-                TABLE_USER_OBJECTS));
-    }
-
-    // Проверка списка объектов пользователя
-    private void compareUserGenerationObjects(int userId, List<Integer> objects,
-                                              List<UserGenerationObject> userGenerationObjects)
-    {
-        assertEquals("Неверное количество объектов пользователя", objects.size(), userGenerationObjects.size());
-        userGenerationObjects.forEach(generationObject ->
-        {
-            assertEquals("Id пользователя не совпадает", userId, generationObject.getUserId());
-            assertEquals("Объект пользователя " + generationObject.getGenerationObjectId() + " не найден", true,
-                    objects.contains(generationObject.getGenerationObjectId()));
-        });
-    }
-
-    /**
-     * Тестирование API методов добавления/получения/удаления объектов ролей
-     * @throws Exception
-     */
-    @Test
-    public void testRoleObjects() throws Exception
-    {
-        JdbcTestUtils.deleteFromTables(jdbcTemplate, TABLE_ROLES);
-        JdbcTestUtils.deleteFromTables(jdbcTemplate, TABLE_ROLE_OBJECTS);
-
-        Role role = getTestRole();
-        String json = jsonMapper.writeValueAsString(role);
-        // Добавление роли
-        mockMvc.perform(post("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk());
-        // Роль добавлена в базу
-        assertEquals("Добавление роли", 1, JdbcTestUtils.countRowsInTable(jdbcTemplate, TABLE_ROLES));
-
-        // Получение роли
-        mockMvc.perform(get("/roles/" + role.getName())).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().json(json));
-
-        // Добавление объектов роли
-        Map<String, String> objects = new HashMap<>();
-        objects.put("service1", "test");
-        objects.put("service2", "{\"json\":\"test\"}");
-        json = jsonMapper.writeValueAsString(objects);
-        mockMvc.perform(post("/roles/" + role.getName() + "/objects").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk());
-        // Объекты добавлены в базу
-        assertEquals("Добавление объектов роли", 2, JdbcTestUtils.countRowsInTable(jdbcTemplate, TABLE_ROLE_OBJECTS));
-
-        // Удаление объектов роли
-        mockMvc.perform(delete("/roles/" + role.getName() + "/objects")).andExpect(status().isOk());
-
-        // Объекты удалены
-        assertEquals("Удаление объектов роли", 0, JdbcTestUtils.countRowsInTable(jdbcTemplate, TABLE_ROLE_OBJECTS));
-    }
-
-    /**
-     * Тестирование API методов добавления/получения/удаления настроек пользоателя
-     * @throws Exception
-     */
-    @Test
-    public void testUserSettings() throws Exception
-    {
-        JdbcTestUtils.deleteFromTables(jdbcTemplate, TABLE_USER_SETTINGS);
-
-        // Получим настройки
-        mockMvc.perform(get("/users/settings")
-            .header("userid", "3")
-            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-            .andExpect(content().json("{}"));
-
-        // Сохраним настройки
-        mockMvc.perform(put("/users/settings")
-            .header("userid", "3")
-            .content("{\"disabled_notifications\":[0,1]}")
-            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
-
-        // Получим настройки
-        mockMvc.perform(get("/users/settings")
-            .header("userid", "3")
-            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-            .andExpect(content().json("{\"disabled_notifications\":[0,1]}"));
     }
 
     /**
