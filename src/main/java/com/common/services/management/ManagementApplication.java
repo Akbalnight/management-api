@@ -3,7 +3,7 @@ package com.common.services.management;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.common.services")
 public class ManagementApplication {
 
 	public static void main(String[] args) {
