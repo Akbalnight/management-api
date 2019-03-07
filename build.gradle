@@ -2,7 +2,7 @@ buildscript {
 	ext {
 		springBootVersion = '2.0.5.RELEASE'
 
-		appVersion = "0.1."
+		appVersion = "1.0."
         buildNumber = (System.getenv("BUILD_NUMBER")?.toString()?.toInteger() ?: 1)
 	}
 	repositories {
@@ -30,15 +30,16 @@ repositories {
 	mavenCentral()
 }
 
-task bootWarCustom (type: Copy, dependsOn:bootWar){
+task bootJarCustom (type: Copy, dependsOn:bootJar){
     from "build/libs"
-    into "../build"
-    include (project.name + "-" + project.version + ".war")
-    rename (project.name + "-" + project.version + ".war", project.name + ".war")
+    into "./build"
+    include (project.name + "-" + project.version + ".jar")
+    rename (project.name + "-" + project.version + ".jar", project.name + ".jar")
 }
-configure(bootWarCustom) {
+
+configure(bootJarCustom) {
     group = BasePlugin.BUILD_GROUP
-    description = 'Assembles bootWar task and copy wars to build directory of root project'
+    description = 'Assembles bootJar task and copy wars to build directory of root project'
 }
 
 dependencies {
