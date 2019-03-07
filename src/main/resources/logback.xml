@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <property name="DEV_HOME" value="${catalina.home}/logs" />
+    <property name="DEV_HOME" value="${logs.location}/logs" />
 
     <appender name="FILE-AUDIT"
         class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -52,6 +52,10 @@
     <!-- logger name="net" level="debug" additivity="false">
         <appender-ref ref="TRAFFIC-AUDIT" />
     </logger-->
+
+    <logger name="info" level="info">
+        <appender-ref ref="FILE-AUDIT"/>
+    </logger>
 
     <root level="error">
         <appender-ref ref="FILE-AUDIT" />
