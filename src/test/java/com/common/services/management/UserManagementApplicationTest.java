@@ -511,10 +511,26 @@ public class UserManagementApplicationTest
         assertEquals("Добавление связей LDAP группы и ролей", 2, JdbcTestUtils.countRowsInTable(jdbcTemplate, TABLE_LDAP_GROUP_ROLES));
 
         // Получение связей LDAP группы и ролей
+        LdapGroup ldapGroup2 = new LdapGroup();
+        ldapGroup2.setGroup("TEST_LDAP_GROUP2");
+        ldapGroup2.setRoles(Collections.singletonList(role.getName()));
+        json = jsonMapper.writeValueAsString(ldapGroup2);
+        mockMvc.perform(post("/ldap/groups").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk());
+
         List<LdapGroup> ldapGroups = new ArrayList<>();
         ldapGroups.add(ldapGroup);
-        json = jsonMapper.writeValueAsString(ldapGroups);
-        mockMvc.perform(get("/ldap/groups")).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().json(json));
+        ldapGroups.add(ldapGroup2);
+        LdapGroupsResult ldapGroupsResult = new LdapGroupsResult();
+        ldapGroupsResult.setGroups(ldapGroups);
+        ldapGroupsResult.setCount(2);
+        json = jsonMapper.writeValueAsString(ldapGroupsResult);
+        mockMvc.perform(get("/ldap/groups/all")).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().json(json));
+
+        // Получение связей LDAP группы и ролей(1 страница из 1 элемента)
+        ldapGroups.remove(1);
+        json = jsonMapper.writeValueAsString(ldapGroupsResult);
+        mockMvc.perform(get("/ldap/groups/all").param("pageSize", "1").param("pageNumber", "1"))
+                .andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().json(json));
 
         // Получение списка ролей по назавнию LDAP группы
         json = jsonMapper.writeValueAsString(roles);
@@ -532,6 +548,9 @@ public class UserManagementApplicationTest
         // Очистка всех связей LDAP группы с ролями
         ldapGroup.setRoles(null);
         json = jsonMapper.writeValueAsString(ldapGroup);
+        mockMvc.perform(delete("/ldap/groups").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk());
+        ldapGroup2.setRoles(null);
+        json = jsonMapper.writeValueAsString(ldapGroup2);
         mockMvc.perform(delete("/ldap/groups").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk());
 
         // Связи удалены
