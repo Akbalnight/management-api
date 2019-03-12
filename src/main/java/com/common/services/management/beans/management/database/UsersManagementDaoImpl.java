@@ -1323,10 +1323,27 @@ public class UsersManagementDaoImpl
     }
 
     @Override
-    public List<LdapGroup> getLdapGroups()
+    public LdapGroupsResult getLdapGroups(Integer pageNumber, Integer pageSize)
     {
-        final String SQL_GET_ALL_LDAP_GROUPS = "SELECT ldap_group, role FROM ldap_roles";
-        return jdbcTemplate.query(SQL_GET_ALL_LDAP_GROUPS, (ResultSet rs) ->
+        LdapGroupsResult result = new LdapGroupsResult();
+        result.setGroups(getLdapGroupsPaging(pageNumber, pageSize));
+        result.setCount(getLdapGroupsCount());
+        return result;
+    }
+
+    private int getLdapGroupsCount()
+    {
+        final String SQL_COUNT_LDAP_GROUPS = "SELECT COUNT(ldap_group) FROM ldap_roles";
+        return jdbcTemplate.getJdbcOperations().queryForObject(SQL_COUNT_LDAP_GROUPS, Integer.class);
+    }
+
+    private List<LdapGroup> getLdapGroupsPaging(Integer pageNumber, Integer pageSize)
+    {
+        final String SQL_GET_ALL_LDAP_GROUPS = "SELECT ldap_group, role FROM ldap_roles LIMIT :limit OFFSET :offset";
+        return jdbcTemplate.query(SQL_GET_ALL_LDAP_GROUPS,
+                new MapSqlParameterSource("limit", pageSize)
+                        .addValue("offset", pageNumber * pageSize),
+                (ResultSet rs) ->
         {
             Map<String, LdapGroup> map = new HashMap<>();
             LdapGroup ldapGroup;

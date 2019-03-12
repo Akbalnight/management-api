@@ -2,6 +2,7 @@ package com.common.services.management.controllers;
 
 
 import com.common.services.management.beans.management.model.LdapGroup;
+import com.common.services.management.beans.management.model.LdapGroupsResult;
 import com.common.services.management.beans.management.service.UsersManagementService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -30,19 +31,26 @@ public class LdapController
      * @param group название LDAP группы
      * @return возвращает список ролей, соответствующих указанной LDAP группе
      */
-    @ApiOperation(value = "Получение списка ролей, соответствующих указанной LDAP группе",
-            notes = "Если название группы не указано, будет возращен список всех LDAP групп со списками соответствующих им ролей")
+    @ApiOperation(value = "Получение списка ролей, соответствующих указанной LDAP группе")
     @GetMapping(value = "/groups")
-    public List<?> getRolesByGroup(@ApiParam(value = "Название LDAP группы", required = false) @RequestBody(required = false) String group)
+    public List<String> getRolesByGroup(@ApiParam(value = "Название LDAP группы", required = true)
+                                   @RequestBody(required = false) String group)
     {
-        if (group == null)
-        {
-            return usersManagementService.getLdapGroups();
-        }
-        else
-        {
-            return usersManagementService.getRolesByLdapGroup(group);
-        }
+        return usersManagementService.getRolesByLdapGroup(group);
+    }
+
+    /**
+     * Получение LDAP групп со списками соответсвующих им ролей
+     * @return Возвращает список LDAP групп со списками ролей
+     */
+    @ApiOperation(value = "Получение LDAP групп со списками соответсвующих им ролей")
+    @GetMapping(value = "/groups/all")
+    public LdapGroupsResult getAllGroups(@ApiParam(value = "Размер страницы")
+                                   @RequestParam(value = "pageSize", required = false) Integer pageSize,
+                                            @ApiParam(value = "Номер страницы")
+                                   @RequestParam(value = "pageNumber", required = false) Integer pageNumber)
+    {
+        return usersManagementService.getLdapGroups(pageNumber, pageSize);
     }
 
     /**

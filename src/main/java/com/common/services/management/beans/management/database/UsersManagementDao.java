@@ -243,9 +243,11 @@ public interface UsersManagementDao
 
     /**
      * Возвращает список всех LDAP групп со списками соответствующих им ролей
+     * @param pageNumber Номер страницы
+     * @param pageSize Количество групп на странице
      * @return возвращает список всех LDAP групп со списками соответствующих им ролей
      */
-    List<LdapGroup> getLdapGroups();
+    LdapGroupsResult getLdapGroups(Integer pageNumber, Integer pageSize);
 
     /**
      * Возвращает список ролей, соответствующих указанной LDAP группе
