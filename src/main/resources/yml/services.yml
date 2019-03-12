@@ -1,0 +1,9 @@
+services:
+  - name: management
+    apiUrl: http://10.5.31.96:8080/management/v2/api-docs
+  - name: act
+    apiUrl: http://10.5.31.96:8080/act/v2/api-docs
+  - name: protocol
+    apiUrl: http://10.5.31.96:8080/protocol/v2/api-docs
+  - name: statement
+    apiUrl: http://10.5.31.96:8080/statement/v2/api-docs

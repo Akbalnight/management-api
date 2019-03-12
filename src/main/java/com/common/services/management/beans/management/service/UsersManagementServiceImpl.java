@@ -11,7 +11,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.common.services.management.beans.management.service.UserManagementHelper.*;
@@ -521,6 +526,37 @@ public class UsersManagementServiceImpl
     public void clearLdapGroup(String group)
     {
         usersManagementDao.clearLdapGroup(group);
+    }
+
+    @Override
+    public int addPermissions(List<Permission> permissions)
+    {
+        return usersManagementDao.addPermissions(permissions
+                .stream()
+                // Очистим пермиссии с одинаковыми method и path
+                .filter(distinctByKeys(Permission::getMethod,Permission::getPath))
+                .collect(Collectors.toList()));
+    }
+
+    @Override
+    public List<Permission> getUnlinkedPermissions()
+    {
+        return usersManagementDao.getUnlinkedPermissions();
+    }
+
+    /**
+     * Очищает дубликаты пермиссий в списке(по method, path)
+     */
+    private static <T> Predicate<T> distinctByKeys(Function<? super T, ?>... keyExtractors)
+    {
+        final Map<List<?>, Boolean> seen = new ConcurrentHashMap<>();
+        return t ->
+        {
+            final List<?> keys = Arrays.stream(keyExtractors)
+                    .map(ke -> ke.apply(t))
+                    .collect(Collectors.toList());
+            return seen.putIfAbsent(keys, Boolean.TRUE) == null;
+        };
     }
 
     /**
