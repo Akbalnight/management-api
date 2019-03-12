@@ -6,6 +6,7 @@ import com.common.services.management.beans.serv.exceptions.ServiceException;
 import com.common.services.management.beans.serv.exceptions.UserNotFoundException;
 import com.common.services.management.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,9 @@ public class UsersManagementServiceImpl
 
     @Autowired
     private Logger logger;
+
+    @Value("${ldap.groups.page.size:50}")
+    protected int pageSize;
 
     @Override
     public User getUser(int id)
@@ -482,9 +486,11 @@ public class UsersManagementServiceImpl
     }
 
     @Override
-    public List<LdapGroup> getLdapGroups()
+    public LdapGroupsResult getLdapGroups(Integer pageNumber, Integer pageSize)
     {
-        return usersManagementDao.getLdapGroups();
+        return usersManagementDao.getLdapGroups(
+                pageNumber == null ? 0 : pageNumber - 1,
+                pageSize == null ? this.pageSize : pageSize);
     }
 
     @Override
