@@ -1333,13 +1333,14 @@ public class UsersManagementDaoImpl
 
     private int getLdapGroupsCount()
     {
-        final String SQL_COUNT_LDAP_GROUPS = "SELECT COUNT(ldap_group) FROM ldap_roles";
+        final String SQL_COUNT_LDAP_GROUPS = "WITH gr AS (SELECT DISTINCT ldap_group FROM ldap_roles) SELECT COUNT(*) FROM gr";
         return jdbcTemplate.getJdbcOperations().queryForObject(SQL_COUNT_LDAP_GROUPS, Integer.class);
     }
 
     private List<LdapGroup> getLdapGroupsPaging(Integer pageNumber, Integer pageSize)
     {
-        final String SQL_GET_ALL_LDAP_GROUPS = "SELECT ldap_group, role FROM ldap_roles LIMIT :limit OFFSET :offset";
+        final String SQL_GET_ALL_LDAP_GROUPS =
+                "SELECT ldap_group, role FROM ldap_roles WHERE ldap_group IN (SELECT DISTINCT ldap_group FROM ldap_roles LIMIT :limit OFFSET :offset)";
         return jdbcTemplate.query(SQL_GET_ALL_LDAP_GROUPS,
                 new MapSqlParameterSource("limit", pageSize)
                         .addValue("offset", pageNumber * pageSize),
