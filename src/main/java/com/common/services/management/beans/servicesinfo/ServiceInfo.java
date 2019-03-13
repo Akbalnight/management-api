@@ -1,12 +1,21 @@
 package com.common.services.management.beans.servicesinfo;
 
 /**
- *
- * Данные сервиса
+ * ServiceInfo.java
+ * Date: 13 марта 2019 г.
+ * Users: amatveev
+ * Description: Данные сервиса
  */
 public class ServiceInfo
 {
+    /**
+     * Название сервиса
+     */
     private String name;
+
+    /**
+     * URL адрес с API сервиса
+     */
     private String apiUrl;
 
     public String getName()

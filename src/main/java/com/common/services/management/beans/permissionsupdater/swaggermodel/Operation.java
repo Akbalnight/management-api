@@ -1,28 +1,35 @@
 package com.common.services.management.beans.permissionsupdater.swaggermodel;
 
 /**
- *
- * Описание операции из API Swagger
+ * Operation.java
+ * Date: 13 марта 2019 г.
+ * Users: amatveev
+ * Description: Описание операции из API Swagger
  */
-public class Operation {
-
+public class Operation
+{
     private String summary;
     private String operationId;
 
-    public String getSummary() {
+    public String getSummary()
+    {
         return summary;
     }
-    public void setSummary(String summary) {
+
+    public void setSummary(String summary)
+    {
         this.summary = summary;
     }
 
 
-    public String getOperationId() {
+    public String getOperationId()
+    {
         return operationId;
     }
-    public void setOperationId(String operationId) {
+
+    public void setOperationId(String operationId)
+    {
         this.operationId = operationId;
     }
-
 }
 

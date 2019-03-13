@@ -28,15 +28,17 @@ import java.util.Map;
 import static org.springframework.http.HttpMethod.*;
 
 /**
- *
- * Получение списка пермиссий сервиса из API swagger
+ * SwaggerApiReader.java
+ * Date: 13 марта 2019 г.
+ * Users: amatveev
+ * Description: Получение списка пермиссий сервиса из API swagger
  */
 @Component
 public class SwaggerApiReader
         implements ApiReader
 {
     @Autowired
-    Logger logger;
+    private Logger logger;
 
     @Override
     public List<Permission> read(ServiceInfo info)
@@ -106,8 +108,8 @@ public class SwaggerApiReader
         }
         catch (IOException e)
         {
-
-            return e.toString();// TODO
+            logger.error(e);
+            return null;
         }
     }
 
@@ -123,19 +125,20 @@ public class SwaggerApiReader
 
             String json = getSwaggerJson(apiUrl);
             JsonNode rootNode = mapper.readTree(json);
-            JsonNode swaggerNode = rootNode.get("swagger");
-            if (swaggerNode == null)
-                return null;
-
             return mapper.convertValue(rootNode, Swagger.class);
         }
-        catch (IOException e)
+        catch (Exception e)
         {
             logger.error(e);
             return null;
         }
     }
 
+    /**
+     * Замена параметров пути на шаблоны
+     * @param path Путь сервиса
+     * @return Возвращает путь сервиса
+     */
     private String replaceVariables(String path)
     {
         String result = path;

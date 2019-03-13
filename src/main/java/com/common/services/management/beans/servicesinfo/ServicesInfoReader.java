@@ -7,8 +7,10 @@ import java.io.*;
 import java.util.List;
 
 /**
- *
- * Считывает данные сервисов с файла services.yml
+ * ServicesInfoReader.java
+ * Date: 13 марта 2019 г.
+ * Users: amatveev
+ * Description: Считывает данные сервисов с файла services.yml
  */
 public class ServicesInfoReader
 {
