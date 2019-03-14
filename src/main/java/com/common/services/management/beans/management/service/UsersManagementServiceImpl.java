@@ -82,10 +82,7 @@ public class UsersManagementServiceImpl
         {
             user.setPassword("");
         }
-        if (!user.getPassword().isEmpty())
-        {
-            user.setPassword(preparePassword(user.getPassword()));
-        }
+        user.setPassword(preparePassword(user.getPassword()));
         return usersManagementDao.addUser(user);
     }
 
