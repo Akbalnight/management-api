@@ -66,74 +66,50 @@ public class PermissionsUpdaterServiceImpl
     {
         AntPathMatcher matcher = new AntPathMatcher();
         List<Permission> existingPermissionsDB = new ArrayList<>();
+        List<Permission> servicesPermissions = new ArrayList<>();
+        List<Permission> existingPermissionsService = new ArrayList<>();
+        permissionsCompare.getServicesPermissions()
+                .values()
+                .forEach(servicePermissions -> servicesPermissions.addAll(servicePermissions));
         // Проверим каждую пермиссию из БД
         permissionsCompare.getDbPermissions().forEach(dbPermission ->
         {
-            if (dbPermission.getJsonData() != null &&
-                    dbPermission.getJsonData().getSkipWhenComparing() != null &&
-                    dbPermission.getJsonData().getSkipWhenComparing())
+            if (dbPermission.getJsonData() != null && dbPermission.getJsonData().getSkipWhenComparing() != null && dbPermission.getJsonData().getSkipWhenComparing())
             {
                 // Если пермиссия из БД не должна участвововать в сравнении, пропустим её
                 return;
             }
             // Флаг что пермиссия из БД была найдена в сервисах
             boolean isAdded = false;
-            // Сервис для пермиссии из БД
-            String service = parseService(dbPermission.getPath());
-            if (service != null)
+
+            // Сравним все пермиссии сервисов
+            for (Permission servicePermission : servicesPermissions)
             {
-                List<Permission> servicePermissions = permissionsCompare.getServicesPermissions().get(service);
-                if (servicePermissions != null)
+                if (servicePermission.getMethod() == dbPermission.getMethod())
                 {
-                    List<Permission> existingPermissionsService = new ArrayList<>();
-                    // Сравним все пермиссии сервиса
-                    for (Permission servicePermission : servicePermissions)
+                    // с пермиссией из БД
+                    if (matcher.match(dbPermission.getPath(), servicePermission.getPath()))
                     {
-                        if (servicePermission.getMethod() == dbPermission.getMethod())
+                        if (!isAdded)
                         {
-                            // с пермиссией из БД
-                            if (matcher.match(dbPermission.getPath(), servicePermission.getPath()))
-                            {
-                                if (!isAdded)
-                                {
-                                    existingPermissionsDB.add(dbPermission);
-                                    isAdded = true;
-                                }
-                                existingPermissionsService.add(servicePermission);
-                                if (!dbPermission.getPath().contains("*"))
-                                {
-                                    // Остановим проверку пермиссий из сервиса если найдено точное соответсвие пути (без шаблонов)
-                                    break;
-                                }
-                            }
+                            existingPermissionsDB.add(dbPermission);
+                            isAdded = true;
+                        }
+                        existingPermissionsService.add(servicePermission);
+                        if (!dbPermission.getPath().contains("*"))
+                        {
+                            // Остановим проверку пермиссий из сервиса если найдено точное соответсвие пути (без шаблонов)
+                            break;
                         }
                     }
-                    // Очистим список пермиссий сервиса, которые были найдены в БД
-                    servicePermissions.removeAll(existingPermissionsService);
                 }
             }
         });
+        // Очистим список пермиссий сервисов, которые были найдены в БД
+        permissionsCompare.getServicesPermissions().values()
+                .forEach(list -> list.removeAll(existingPermissionsService));
         // Очистим список пермиссий БД, которые были найдены в сервисах
         permissionsCompare.getDbPermissions().removeAll(existingPermissionsDB);
-    }
-
-    /**
-     * Определяет название сервиса по пути пермиссии
-     * @param path Путь пермиссии
-     * @return Возвращает название сервиса
-     */
-    private String parseService(String path)
-    {
-        if (path.startsWith("/"))
-        {
-            path = path.substring(1);
-        }
-        int index = path.indexOf("/");
-        if (index > 0)
-        {
-            return path.substring(0, index);
-        }
-        return null;
     }
 
     private List<Permission> getPermissionsFromService(ServiceInfo info)

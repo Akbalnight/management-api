@@ -14,6 +14,7 @@ import com.google.common.base.Charsets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,6 +41,18 @@ public class SwaggerApiReader
     @Autowired
     private Logger logger;
 
+    private ObjectMapper jsonMapper;
+
+    @PostConstruct
+    private void init()
+    {
+        jsonMapper = new ObjectMapper();
+        jsonMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        jsonMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        jsonMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        jsonMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
     @Override
     public List<Permission> read(ServiceInfo info)
     {
@@ -49,43 +62,30 @@ public class SwaggerApiReader
             return Collections.emptyList();
         }
         String basePath = swagger.getBasePath();
-        basePath = (basePath.equals("/") ? "" : basePath);
+        // Добавление названия сервиса к пути пермиссии
+        if (basePath.equals("/"))
+        {
+            basePath += info.getName();
+        }
         List<Permission> permissions = new ArrayList<>();
-
         for (Map.Entry<String, Path> path : swagger.getPaths().entrySet())
         {
             String pathPermission = basePath + replaceVariables(path.getKey());
             if (path.getValue().getGet() != null)
             {
-                Permission p = new Permission();
-                p.setDescription(path.getValue().getGet().getSummary());
-                p.setPath(pathPermission);
-                p.setMethod(GET);
-                permissions.add(p);
+                permissions.add(new Permission(GET, pathPermission, path.getValue().getGet().getSummary()));
             }
             if (path.getValue().getPost() != null)
             {
-                Permission p = new Permission();
-                p.setDescription(path.getValue().getPost().getSummary());
-                p.setPath(pathPermission);
-                p.setMethod(POST);
-                permissions.add(p);
+                permissions.add(new Permission(POST, pathPermission, path.getValue().getPost().getSummary()));
             }
             if (path.getValue().getPut() != null)
             {
-                Permission p = new Permission();
-                p.setDescription(path.getValue().getPut().getSummary());
-                p.setPath(pathPermission);
-                p.setMethod(PUT);
-                permissions.add(p);
+                permissions.add(new Permission(PUT, pathPermission, path.getValue().getPut().getSummary()));
             }
             if (path.getValue().getDelete() != null)
             {
-                Permission p = new Permission();
-                p.setDescription(path.getValue().getDelete().getSummary());
-                p.setPath(pathPermission);
-                p.setMethod(DELETE);
-                permissions.add(p);
+                permissions.add(new Permission(DELETE, pathPermission, path.getValue().getDelete().getSummary()));
             }
         }
         return permissions;
@@ -117,15 +117,9 @@ public class SwaggerApiReader
     {
         try
         {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-            mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-            mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
             String json = getSwaggerJson(apiUrl);
-            JsonNode rootNode = mapper.readTree(json);
-            return mapper.convertValue(rootNode, Swagger.class);
+            JsonNode rootNode = jsonMapper.readTree(json);
+            return jsonMapper.convertValue(rootNode, Swagger.class);
         }
         catch (Exception e)
         {
