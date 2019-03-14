@@ -14,4 +14,19 @@ public class PermissionJsonObject
     public PermissionJsonObject()
     {
     }
+
+    /**
+     * Флаг true если пермиссия не должна участвовать при сравнении пермиссий из сервисов
+     */
+    private Boolean skipWhenComparing;
+
+    public Boolean getSkipWhenComparing()
+    {
+        return skipWhenComparing;
+    }
+
+    public void setSkipWhenComparing(Boolean skipWhenComparing)
+    {
+        this.skipWhenComparing = skipWhenComparing;
+    }
 }

@@ -21,6 +21,17 @@ public class Permission
     private PermissionJsonObject jsonData;
     private List<Role> roles = Collections.emptyList();
 
+    public Permission()
+    {
+    }
+
+    public Permission(HttpMethod method, String path, String description)
+    {
+        this.method = method;
+        this.path = path;
+        this.description = description;
+    }
+
     /**
      * Возвращяет json объект пермиссии
      *

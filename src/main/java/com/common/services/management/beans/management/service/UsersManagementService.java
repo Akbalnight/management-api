@@ -288,4 +288,17 @@ public interface UsersManagementService
      * @param group название LDAP группы
      */
     void clearLdapGroup(String group);
+
+    /**
+     * Добавляет список пермиссий в БД
+     * @param permissions Список пермиссий для добавления
+     * @return Возвращает количество добавленный пермиссий
+     */
+    int addPermissions(List<Permission> permissions);
+
+    /**
+     * Возвращает все пермиссии не связанные с ролями пользователей
+     * @return Возвращает все пермиссии не связанные с ролями пользователей
+     */
+    List<Permission> getUnlinkedPermissions();
 }

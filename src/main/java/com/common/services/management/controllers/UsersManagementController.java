@@ -453,4 +453,11 @@ public class UsersManagementController
 
         service.changeUserPassword(userId, changePasswordObject);
     }
+
+    @GetMapping(value="/permissions/unlinked")
+    @ApiOperation(value = "Получить все пермиссии не связанные с ролями пользователей")
+    public List<Permission> getUnlinkedPermissions()
+    {
+        return service.getUnlinkedPermissions();
+    }
 }

@@ -36,10 +36,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
@@ -1432,6 +1429,70 @@ public class UsersManagementDaoImpl
         final String SQL_REMOVE_ROLES_FROM_LDAP_GROUPS = "DELETE FROM ldap_roles WHERE ldap_group=:group";
         SqlParameterSource params = new MapSqlParameterSource("group", group);
         jdbcTemplate.update(SQL_REMOVE_ROLES_FROM_LDAP_GROUPS, params);
+    }
+
+    @Override
+    public int addPermissions(List<Permission> permissions)
+    {
+        if (permissions.size() == 0)
+        {
+            return 0;
+        }
+        final String SQL_ADD_PERMISSION = "INSERT INTO permissions(description, path, method, json_data) VALUES " +
+                "(:description, :path, :method, cast(:jsonData AS JSON))";
+
+        List<Map<String, Object>> batchValues = new ArrayList<>(permissions.size());
+        for (Permission permission : permissions)
+        {
+            String json = null;
+            try
+            {
+                json = jsonMapper.writeValueAsString(permission.getJsonData());
+            }
+            catch (JsonProcessingException e)
+            {
+                logger.error(e);
+            }
+            MapSqlParameterSource params = new MapSqlParameterSource();
+            params.addValue("description", permission.getDescription());
+            params.addValue("path", permission.getPath());
+            params.addValue("method", permission.getMethod().toString());
+            params.addValue("jsonData", json);
+            batchValues.add(params.getValues());
+        }
+        int[] result = jdbcTemplate.batchUpdate(SQL_ADD_PERMISSION, batchValues.toArray(new Map[permissions.size()]));
+        // Количество добавленных записей
+        return (int) Arrays.stream(result).filter(item -> item == 1).count();
+    }
+
+    @Override
+    public List<Permission> getUnlinkedPermissions()
+    {
+        final String SQL_GET_ALL_PERMISSIONS = "SELECT id, description, path, method, json_data FROM permissions AS p LEFT JOIN role_permissions AS rp ON p.id = rp.id_permission WHERE rp.role IS NULL";
+        return jdbcTemplate.query(SQL_GET_ALL_PERMISSIONS, new RowMapper<Permission>()
+        {
+            @Override
+            public Permission mapRow(ResultSet rs, int rowNum) throws SQLException
+            {
+                Permission permission = new Permission();
+                permission.setId(rs.getInt("id"));
+                permission.setDescription(rs.getString("description"));
+                permission.setPath(rs.getString("path"));
+                permission.setMethod(rs.getString("method"));
+
+                String jsonString = rs.getString("json_data");
+                try
+                {
+                    PermissionJsonObject jsonData = jsonMapper.readValue(jsonString, PermissionJsonObject.class);
+                    permission.setJsonData(jsonData);
+                }
+                catch (IOException e)
+                {
+                    logger.error(e);
+                }
+                return permission;
+            }
+        });
     }
 
     @Transactional
