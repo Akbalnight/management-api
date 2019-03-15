@@ -58,11 +58,11 @@ public class UsersManagementDaoImpl
     public static final String DB_CONFIG_NAME = "auth";
     private static final String RESOURCE_CREATE_TABLES = "/db_auth_create_tables.sql";
 
-    private static final String SQL_VALIDATE_USERS = "SELECT username FROM users";
-    private static final String SQL_VALIDATE_ROLES = "SELECT name FROM roles";
-    private static final String SQL_VALIDATE_PERMISSIONS = "SELECT id FROM permissions";
-    private static final String SQL_VALIDATE_USER_ROLES = "SELECT username FROM user_roles";
-    private static final String SQL_VALIDATE_ROLE_PERMISSIONS = "SELECT id_permission FROM role_permissions";
+    private static final String SQL_VALIDATE_USERS = "SELECT username FROM users LIMIT 1";
+    private static final String SQL_VALIDATE_ROLES = "SELECT name FROM roles LIMIT 1";
+    private static final String SQL_VALIDATE_PERMISSIONS = "SELECT id FROM permissions LIMIT 1";
+    private static final String SQL_VALIDATE_USER_ROLES = "SELECT username FROM user_roles LIMIT 1";
+    private static final String SQL_VALIDATE_ROLE_PERMISSIONS = "SELECT id_permission FROM role_permissions LIMIT 1";
 
 
     private static final String SQL_INSERT_PERMISSION_ROLES =

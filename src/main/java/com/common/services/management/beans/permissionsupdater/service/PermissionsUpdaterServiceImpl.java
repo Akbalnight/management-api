@@ -10,7 +10,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * PermissionsUpdaterServiceImpl.java
@@ -65,46 +68,34 @@ public class PermissionsUpdaterServiceImpl
     private void removeDuplicatePermissions(PermissionsCompare permissionsCompare)
     {
         AntPathMatcher matcher = new AntPathMatcher();
-        List<Permission> existingPermissionsDB = new ArrayList<>();
+        Set<Permission> existingPermissionsDB = new HashSet<>();
         List<Permission> servicesPermissions = new ArrayList<>();
         List<Permission> existingPermissionsService = new ArrayList<>();
         permissionsCompare.getServicesPermissions()
                 .values()
                 .forEach(servicePermissions -> servicesPermissions.addAll(servicePermissions));
-        // Проверим каждую пермиссию из БД
-        permissionsCompare.getDbPermissions().forEach(dbPermission ->
-        {
-            if (dbPermission.getJsonData() != null && dbPermission.getJsonData().getSkipWhenComparing() != null && dbPermission.getJsonData().getSkipWhenComparing())
-            {
-                // Если пермиссия из БД не должна участвововать в сравнении, пропустим её
-                return;
-            }
-            // Флаг что пермиссия из БД была найдена в сервисах
-            boolean isAdded = false;
 
-            // Сравним все пермиссии сервисов
-            for (Permission servicePermission : servicesPermissions)
-            {
-                if (servicePermission.getMethod() == dbPermission.getMethod())
-                {
-                    // с пермиссией из БД
-                    if (matcher.match(dbPermission.getPath(), servicePermission.getPath()))
-                    {
-                        if (!isAdded)
-                        {
-                            existingPermissionsDB.add(dbPermission);
-                            isAdded = true;
-                        }
-                        existingPermissionsService.add(servicePermission);
-                        if (!dbPermission.getPath().contains("*"))
-                        {
-                            // Остановим проверку пермиссий из сервиса если найдено точное соответсвие пути (без шаблонов)
-                            break;
-                        }
-                    }
-                }
-            }
-        });
+        // Если пермиссия из БД не должна участвововать в сравнении, пропустим её
+        List<Permission> dbPermissions = permissionsCompare.getDbPermissions()
+                .stream()
+                .filter(dbPermission ->
+                        dbPermission.getJsonData() == null
+                                || dbPermission.getJsonData().getSkipWhenComparing() == null
+                                || !dbPermission.getJsonData().getSkipWhenComparing())
+                .collect(Collectors.toList());
+
+        // Сравним все пермиссии сервисов с пермиссией из БД
+        dbPermissions.stream()
+                .forEach(dbPermission ->
+                        servicesPermissions.stream()
+                                .filter(servicePermission -> servicePermission.getMethod() == dbPermission.getMethod()
+                                        && matcher.match(dbPermission.getPath(), servicePermission.getPath()))
+                                .forEach(servicePermission ->
+                                {
+                                    existingPermissionsDB.add(dbPermission);
+                                    existingPermissionsService.add(servicePermission);
+                                })
+                );
         // Очистим список пермиссий сервисов, которые были найдены в БД
         permissionsCompare.getServicesPermissions().values()
                 .forEach(list -> list.removeAll(existingPermissionsService));

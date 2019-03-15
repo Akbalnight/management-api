@@ -135,15 +135,7 @@ public class SwaggerApiReader
      */
     private String replaceVariables(String path)
     {
-        String result = path;
-        int index = path.indexOf("{");
-        while (index > 0)
-        {
-            int endIndex = result.indexOf("}");
-            result = result.substring(0, index) + "*" + result.substring(endIndex + 1);
-
-            index = result.indexOf("{");
-        }
-        return result;
+        // Замена всех {текст} на *
+        return path.replaceAll("\\{.+?\\}", "*");
     }
 }
