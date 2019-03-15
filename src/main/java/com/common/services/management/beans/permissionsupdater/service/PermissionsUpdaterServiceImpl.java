@@ -72,39 +72,35 @@ public class PermissionsUpdaterServiceImpl
                 .values()
                 .forEach(servicePermissions -> servicesPermissions.addAll(servicePermissions));
         // Проверим каждую пермиссию из БД
-        permissionsCompare.getDbPermissions().forEach(dbPermission ->
-        {
-            if (dbPermission.getJsonData() != null && dbPermission.getJsonData().getSkipWhenComparing() != null && dbPermission.getJsonData().getSkipWhenComparing())
-            {
-                // Если пермиссия из БД не должна участвововать в сравнении, пропустим её
-                return;
-            }
-            // Флаг что пермиссия из БД была найдена в сервисах
-            boolean isAdded = false;
-
-            // Сравним все пермиссии сервисов
-            for (Permission servicePermission : servicesPermissions)
-            {
-                if (servicePermission.getMethod() == dbPermission.getMethod())
-                {
-                    // с пермиссией из БД
-                    if (matcher.match(dbPermission.getPath(), servicePermission.getPath()))
+        permissionsCompare.getDbPermissions().stream()
+                .filter(dbPermission -> // Если пермиссия из БД не должна участвововать в сравнении, пропустим её
+                        dbPermission.getJsonData() == null
+                        || dbPermission.getJsonData().getSkipWhenComparing() == null
+                        || !dbPermission.getJsonData().getSkipWhenComparing())
+                .forEach(dbPermission ->
                     {
-                        if (!isAdded)
+                        // Флаг что пермиссия из БД была найдена в сервисах
+                        boolean isAdded = false;
+                        // Сравним все пермиссии сервисов с пермиссией из БД
+                        for (Permission servicePermission : servicesPermissions)
                         {
-                            existingPermissionsDB.add(dbPermission);
-                            isAdded = true;
+                            if (servicePermission.getMethod() == dbPermission.getMethod()
+                                    && matcher.match(dbPermission.getPath(), servicePermission.getPath()))
+                            {
+                                if (!isAdded)
+                                {
+                                    existingPermissionsDB.add(dbPermission);
+                                    isAdded = true;
+                                }
+                                existingPermissionsService.add(servicePermission);
+                                if (!dbPermission.getPath().contains("*"))
+                                {
+                                    // Остановим проверку пермиссий из сервиса если найдено точное соответсвие пути(без шаблонов)
+                                    break;
+                                }
+                            }
                         }
-                        existingPermissionsService.add(servicePermission);
-                        if (!dbPermission.getPath().contains("*"))
-                        {
-                            // Остановим проверку пермиссий из сервиса если найдено точное соответсвие пути (без шаблонов)
-                            break;
-                        }
-                    }
-                }
-            }
-        });
+                    });
         // Очистим список пермиссий сервисов, которые были найдены в БД
         permissionsCompare.getServicesPermissions().values()
                 .forEach(list -> list.removeAll(existingPermissionsService));
