@@ -1,9 +1,23 @@
 services:
-  - name: management
-    apiUrl: http://10.5.31.96:8080/management/v2/api-docs
-  - name: act
-    apiUrl: http://10.5.31.96:8080/act/v2/api-docs
-  - name: protocol
-    apiUrl: http://10.5.31.96:8080/protocol/v2/api-docs
   - name: statement
-    apiUrl: http://10.5.31.96:8080/statement/v2/api-docs
+    apiUrl: http://app.hlaskute:8080/statement/v2/api-docs
+  - name: protocol
+    apiUrl: http://app.hlaskute:8080/protocol/v2/api-docs
+  - name: act
+    apiUrl: http://app.hlaskute:8080/act/v2/api-docs
+  - name: directory
+    apiUrl: http://app.hlaskute:8080/directory/v2/api-docs
+  - name: approvment
+    apiUrl: http://app.hlaskute:8080/approvment/v2/api-docs
+  - name: reports
+    apiUrl: http://app.hlaskute:8801/v2/api-docs
+  - name: reglament
+    apiUrl: http://app.hlaskute:8080/reglament/v2/api-docs
+  - name: notifications
+    apiUrl: http://app.hlaskute:8080/notifications/v2/api-docs
+  - name: management
+    apiUrl: http://app.hlaskute:8807/v2/api-docs
+  - name: management-object
+    apiUrl: http://app.hlaskute:8808/v2/api-docs
+  - name: monitoring
+    apiUrl: http://app.hlaskute:8802/v2/api-docs
