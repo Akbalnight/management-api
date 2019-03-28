@@ -19,12 +19,12 @@ import static springfox.documentation.builders.PathSelectors.regex;
 @Configuration
 public class SwaggerConfig
 {
+    @Bean
     public Docket productApi()
     {
         return new Docket(DocumentationType.SWAGGER_2)
-            .select()
-            .apis(RequestHandlerSelectors.basePackage("com.common.services.management"))
-            .paths(regex("rest.*"))
-            .build();
+                .select()
+                .apis(RequestHandlerSelectors.basePackage("com.common.services.management"))
+                .build();
     }
 }
