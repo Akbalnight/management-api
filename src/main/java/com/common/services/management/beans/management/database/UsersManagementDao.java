@@ -302,4 +302,11 @@ public interface UsersManagementDao
      * @return Возвращает все пермиссии не связанные с ролями пользователей
      */
     List<Permission> getUnlinkedPermissions();
+
+    /**
+     * Возвращает ФИО всех пользователей с указанной ролью
+     * @param role Название роли
+     * @return Возвращает ФИО всех пользователей с указанной ролью
+     */
+    List<UserShort> getShortUsersWithRole(String role);
 }

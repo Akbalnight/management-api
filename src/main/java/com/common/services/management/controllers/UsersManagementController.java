@@ -460,4 +460,11 @@ public class UsersManagementController
     {
         return service.getUnlinkedPermissions();
     }
+
+    @GetMapping(value = "/users/portal")
+    @ApiOperation(value = "Получить ФИО всех пользователей с ролью ROLE_PORTAL")
+    public List<UserShort> getPortalUsers()
+    {
+        return service.getPortalUsers();
+    }
 }

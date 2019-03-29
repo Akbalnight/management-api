@@ -547,6 +547,12 @@ public class UsersManagementServiceImpl
         return usersManagementDao.getUnlinkedPermissions();
     }
 
+    @Override
+    public List<UserShort> getPortalUsers()
+    {
+        return usersManagementDao.getShortUsersWithRole("ROLE_PORTAL");
+    }
+
     /**
      * Очищает дубликаты пермиссий в списке(по method, path)
      */
