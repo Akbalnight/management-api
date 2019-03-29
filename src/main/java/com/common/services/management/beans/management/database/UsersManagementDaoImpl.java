@@ -1495,6 +1495,70 @@ public class UsersManagementDaoImpl
         });
     }
 
+    @Override
+    public List<UserShort> getShortUsersWithRole(String role)
+    {
+        final String SQL_GET_USER_BY_ROLE ="SELECT u.username, u.user_id, u.json_data FROM users AS u JOIN user_roles" +
+                " AS ur ON u.username = ur.username AND ur.role = :role";
+        final SqlParameterSource params = new MapSqlParameterSource("role", role);
+        return jdbcTemplate.query(SQL_GET_USER_BY_ROLE, params, new RowMapper<UserShort>()
+        {
+            @Override
+            public UserShort mapRow(ResultSet rs, int rowNum) throws SQLException
+            {
+                UserShort user = new UserShort();
+                user.setId(rs.getInt("user_id"));
+                String username = rs.getString("username");
+                user.setShortName(username);
+                user.setFullName(username);
+
+                String firstName = "";
+                String lastName = "";
+                String middleName = "";
+
+                String jsonString = rs.getString("json_data");
+                try
+                {
+                    TypeReference<Map<String, Object>> typeRef = new TypeReference<Map<String, Object>>(){};
+                    Map<String, Object> jsonData = jsonMapper.readValue(jsonString, typeRef);
+                    for (Map.Entry<String, Object> entry : jsonData.entrySet())
+                    {
+                        if (entry.getKey().equals("firstName"))
+                        {
+                            firstName = entry.getValue().toString();
+                        }
+                        else if (entry.getKey().equals("lastName"))
+                        {
+                            lastName = entry.getValue().toString();
+                        }
+                        else if (entry.getKey().equals("middleName"))
+                        {
+                            middleName = entry.getValue().toString();
+                        }
+                    }
+                    if(!lastName.isEmpty())
+                    {
+                        user.setFullName((
+                                        (lastName.isEmpty() ? "" : (lastName + " ")) +
+                                        (firstName.isEmpty() ? "" : (firstName + " ")) +
+                                        (middleName.isEmpty() ? "" : (middleName + " "))
+                                ).trim());
+                        user.setShortName((
+                                        (lastName.isEmpty() ? "" : (lastName + " ")) +
+                                        (firstName.isEmpty() ? "" : (firstName.charAt(0)+ ".")) +
+                                        (middleName.isEmpty() ? "" : (middleName.charAt(0) + "."))
+                                ).trim());
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.error(e);
+                }
+                return user;
+            }
+        });
+    }
+
     @Transactional
     @Override
     @SuppressWarnings("unchecked")

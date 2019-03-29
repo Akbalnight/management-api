@@ -301,4 +301,10 @@ public interface UsersManagementService
      * @return Возвращает все пермиссии не связанные с ролями пользователей
      */
     List<Permission> getUnlinkedPermissions();
+
+    /**
+     * Возвращает ФИО всех пользователей с ролью ROLE_PORTAL
+     * @return Возвращает ФИО всех пользователей с ролью ROLE_PORTAL
+     */
+    List<UserShort> getPortalUsers();
 }
