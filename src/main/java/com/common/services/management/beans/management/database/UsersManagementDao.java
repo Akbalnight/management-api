@@ -199,7 +199,7 @@ public interface UsersManagementDao
     void removeUserRoles(String username, RoleNameList roles);
 
     /**
-     * Устанваливает указанные роли пользователю
+     * Устанавливает указанные роли пользователю
      * Все роли пользователя не указанные в списке будут удалены
      * @param username логин пользователя
      * @param roles

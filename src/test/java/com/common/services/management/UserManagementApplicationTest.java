@@ -105,26 +105,28 @@ public class UserManagementApplicationTest
         User user = getTestUser();
         String json = jsonMapper.writeValueAsString(user);
         // Добавление User
-        String userId =
+        String userJson =
                 mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        User addedUser = jsonMapper.readValue(userJson, User.class);
         // User добавлен в базу
         assertEquals("Добавление пользователя", 1, JdbcTestUtils.countRowsInTable(jdbcTemplate, TABLE_USERS));
 
         // Получение User
-        user.setId(Integer.parseInt(userId));
+        user.setId(addedUser.getId());
         user.setPassword(null);
         json = jsonMapper.writeValueAsString(user);
-        mockMvc.perform(get("/users/" + userId)).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
+        mockMvc.perform(get("/users/" + user.getId())).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
                 json(json));
 
         // Получение списка пользователей
         User user2 = getTestUser();
         user2.setName("user2");
         json = jsonMapper.writeValueAsString(user2);
-        userId =
+        userJson =
                 mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        addedUser = jsonMapper.readValue(userJson, User.class);
 
-        user2.setId(Integer.parseInt(userId));
+        user2.setId(addedUser.getId());
         user2.setPassword(null);
         List<User> users = new ArrayList<>();
         users.add(user);
@@ -135,8 +137,8 @@ public class UserManagementApplicationTest
         assertEquals("Получение списка пользователей", 2, JdbcTestUtils.countRowsInTable(jdbcTemplate, TABLE_USERS));
 
         // Удаление пользователя
-        mockMvc.perform(delete("/users/" + userId)).andExpect(status().isOk());
-        mockMvc.perform(get("/users/" + userId)).andExpect(status().isNotFound());
+        mockMvc.perform(delete("/users/" + user2.getId())).andExpect(status().isOk());
+        mockMvc.perform(get("/users/" + user2.getId())).andExpect(status().isNotFound());
         assertEquals("Удаление пользователя", 1, JdbcTestUtils.countRowsInTable(jdbcTemplate, TABLE_USERS));
 
         // Изменение пользователя
@@ -216,16 +218,17 @@ public class UserManagementApplicationTest
         Permission permission = getTestPermission();
         String json = jsonMapper.writeValueAsString(permission);
         // Добавление пермиссии
-        String id =
+        String permissionJson =
                 mockMvc.perform(post("/permissions").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        Permission addedPermission = jsonMapper.readValue(permissionJson, Permission.class);
 
         // Пермиссия добавлена в базу
         assertEquals("Добавление пермиссии", 1, JdbcTestUtils.countRowsInTable(jdbcTemplate, TABLE_PERMISSIONS));
 
         // Получение пермиссии
-        permission.setId(Integer.parseInt(id));
+        permission.setId(addedPermission.getId());
         json = jsonMapper.writeValueAsString(permission);
-        mockMvc.perform(get("/permissions/" + id)).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
+        mockMvc.perform(get("/permissions/" + permission.getId())).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
                 json(json));
 
         // Получение списка пермиссий
@@ -233,9 +236,10 @@ public class UserManagementApplicationTest
         permission2.setPath("/path2");
         permission2.setMethod(HttpMethod.POST);
         json = jsonMapper.writeValueAsString(permission2);
-        id = mockMvc.perform(post("/permissions").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        permissionJson = mockMvc.perform(post("/permissions").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        addedPermission = jsonMapper.readValue(permissionJson, Permission.class);
 
-        permission2.setId(Integer.parseInt(id));
+        permission2.setId(addedPermission.getId());
         List<Permission> permissions = new ArrayList<>();
         permissions.add(permission);
         permissions.add(permission2);
@@ -245,8 +249,8 @@ public class UserManagementApplicationTest
         assertEquals("Получение списка пермиссий", 2, JdbcTestUtils.countRowsInTable(jdbcTemplate, TABLE_PERMISSIONS));
 
         // Удаление пермиссии
-        mockMvc.perform(delete("/permissions/" + id)).andExpect(status().isOk());
-        mockMvc.perform(get("/permissions/" + id)).andExpect(status().isNotFound());
+        mockMvc.perform(delete("/permissions/" + permission2.getId())).andExpect(status().isOk());
+        mockMvc.perform(get("/permissions/" + permission2.getId())).andExpect(status().isNotFound());
         assertEquals("Удаление пермиссии", 1, JdbcTestUtils.countRowsInTable(jdbcTemplate, TABLE_PERMISSIONS));
 
         // Изменение пермиссии
@@ -274,9 +278,10 @@ public class UserManagementApplicationTest
         // Добавление пользователя
         User user = getTestUser();
         String json = jsonMapper.writeValueAsString(user);
-        String userId =
+        String userJson =
                 mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        user.setId(Integer.parseInt(userId));
+        User addedUser = jsonMapper.readValue(userJson, User.class);
+        user.setId(addedUser.getId());
 
         // Добавление роли
         Role role = getTestRole();
@@ -287,13 +292,13 @@ public class UserManagementApplicationTest
         roleNames.setRoles(Collections.singletonList(role.getName()));
         json = jsonMapper.writeValueAsString(roleNames);
         // Добавление связи роли и пользователя
-        mockMvc.perform(post("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("userid", userId)).andExpect(status().isOk());
+        mockMvc.perform(post("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("userid", user.getId().toString())).andExpect(status().isOk());
 
         // Получение списка ролей пользователя
         role.setPermissions(null);
         List<Role> roles = Collections.singletonList(role);
         json = jsonMapper.writeValueAsString(roles);
-        mockMvc.perform(get("/roles").param("userid", userId)).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
+        mockMvc.perform(get("/roles").param("userid", user.getId().toString())).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
                 json(json));
 
         // Получение списка пользователей с указанной ролью
@@ -319,18 +324,18 @@ public class UserManagementApplicationTest
         mockMvc.perform(post("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk());
         roleNames.setRoles(Collections.singletonList(role.getName()));
         json = jsonMapper.writeValueAsString(roleNames);
-        mockMvc.perform(put("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("userid", userId)).andExpect(status().isOk());
+        mockMvc.perform(put("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("userid", user.getId().toString())).andExpect(status().isOk());
         role.setPermissions(null);
         roles = Collections.singletonList(role);
         json = jsonMapper.writeValueAsString(roles);
-        mockMvc.perform(get("/roles").param("userid", userId)).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
+        mockMvc.perform(get("/roles").param("userid", user.getId().toString())).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
                 json(json));
 
         // Удаление связи роли и пользователя
         roleNames.setRoles(Collections.singletonList(role.getName()));
         json = jsonMapper.writeValueAsString(roleNames);
-        mockMvc.perform(delete("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("userid", userId)).andExpect(status().isOk());
-        mockMvc.perform(get("/roles").param("userid", userId)).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
+        mockMvc.perform(delete("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("userid", user.getId().toString())).andExpect(status().isOk());
+        mockMvc.perform(get("/roles").param("userid", user.getId().toString())).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
                 json("[]"));
         assertEquals("Удаление связи пользователя и роли", 0, JdbcTestUtils.countRowsInTable(jdbcTemplate,
                 TABLE_USER_ROLES));
@@ -350,9 +355,10 @@ public class UserManagementApplicationTest
         // Добавление пермиссии
         Permission permission = getTestPermission();
         String json = jsonMapper.writeValueAsString(permission);
-        String permissionId =
+        String permissionJson =
                 mockMvc.perform(post("/permissions").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        permission.setId(Integer.parseInt(permissionId));
+        Permission addedPermission = jsonMapper.readValue(permissionJson, Permission.class);
+        permission.setId(addedPermission.getId());
 
         // Добавление роли
         Role role = getTestRole();
@@ -376,9 +382,10 @@ public class UserManagementApplicationTest
         permission.setMethod(HttpMethod.POST);
         permission.setDescription("rename_desc");
         json = jsonMapper.writeValueAsString(permission);
-        permissionId =
+        permissionJson =
                 mockMvc.perform(post("/permissions").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        permission.setId(Integer.parseInt(permissionId));
+        addedPermission = jsonMapper.readValue(permissionJson, Permission.class);
+        permission.setId(addedPermission.getId());
         permissionIdList.setIds(Collections.singletonList(permission.getId()));
         json = jsonMapper.writeValueAsString(permissionIdList);
         mockMvc.perform(put("/permissions").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("role", role.getName())).andExpect(status().isOk());
@@ -412,9 +419,10 @@ public class UserManagementApplicationTest
         // Добавление пермиссии
         Permission permission = getTestPermission();
         String json = jsonMapper.writeValueAsString(permission);
-        String permissionId =
+        String permissionJson =
                 mockMvc.perform(post("/permissions").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        permission.setId(Integer.parseInt(permissionId));
+        Permission addedPermission = jsonMapper.readValue(permissionJson, Permission.class);
+        permission.setId(addedPermission.getId());
 
         // Добавление роли
         Role role = getTestRole();
@@ -425,13 +433,13 @@ public class UserManagementApplicationTest
         roleNameList.setRoles(Collections.singletonList(role.getName()));
         json = jsonMapper.writeValueAsString(roleNameList);
         // Добавление связи пермиссии и роли
-        mockMvc.perform(post("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("idpermission", permissionId)).andExpect(status().isOk());
+        mockMvc.perform(post("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("idpermission", permission.getId().toString())).andExpect(status().isOk());
 
         // Получение списка ролей пермиссии
         role.setPermissions(null);
         List<Role> roles = Collections.singletonList(role);
         json = jsonMapper.writeValueAsString(roles);
-        mockMvc.perform(get("/roles").param("idpermission", permissionId)).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
+        mockMvc.perform(get("/roles").param("idpermission", permission.getId().toString())).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
                 json(json));
 
         // Изменение ролей пермиссий
@@ -441,17 +449,17 @@ public class UserManagementApplicationTest
         mockMvc.perform(post("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         roleNameList.setRoles(Collections.singletonList(role.getName()));
         json = jsonMapper.writeValueAsString(roleNameList);
-        mockMvc.perform(put("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("idpermission", permissionId)).andExpect(status().isOk());
+        mockMvc.perform(put("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("idpermission", permission.getId().toString())).andExpect(status().isOk());
         roles = Collections.singletonList(role);
         json = jsonMapper.writeValueAsString(roles);
-        mockMvc.perform(get("/roles").param("idpermission", permissionId)).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
+        mockMvc.perform(get("/roles").param("idpermission", permission.getId().toString())).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
                 json(json));
 
         // Удаление связи роли и пермиссии
         roleNameList.setRoles(Collections.singletonList(role.getName()));
         json = jsonMapper.writeValueAsString(roleNameList);
-        mockMvc.perform(delete("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("idpermission", permissionId)).andExpect(status().isOk());
-        mockMvc.perform(get("/roles").param("idpermission", permissionId)).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
+        mockMvc.perform(delete("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("idpermission", permission.getId().toString())).andExpect(status().isOk());
+        mockMvc.perform(get("/roles").param("idpermission", permission.getId().toString())).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
                 json("[]"));
         assertEquals("Удаление связи пермиссии и роли", 0, JdbcTestUtils.countRowsInTable(jdbcTemplate,
                 TABLE_USER_ROLES));

@@ -74,8 +74,8 @@ public class UsersManagementController
      * @return возваращает id добавленного пользователя
      */
     @PostMapping(value = "/users")
-    @ApiOperation(value = "Добавление пользователя", notes = "Возвращает id добавленного пользователя")
-    public int addUser(@ApiParam(value = "Данные пользователя", required = true) @RequestBody User user)
+    @ApiOperation(value = "Добавление пользователя", notes = "Вернет данные добавленного пользователя")
+    public User addUser(@ApiParam(value = "Данные пользователя", required = true) @RequestBody User user)
     {
         return service.addUser(user);
     }
@@ -85,24 +85,27 @@ public class UsersManagementController
      * Пользователь с указанным id должен быть записан в БД
      * @param id   id пользователя
      * @param user данные пользователя
+     * @return Возвращает обновленные данные пользователя
      */
     @PutMapping(value = "/users/{id}")
-    @ApiOperation(value = "Обновление данных пользователя")
-    public void updateUser(@ApiParam(value = "Id пользователя", required = true) @PathVariable("id") int id,
+    @ApiOperation(value = "Обновление данных пользователя", notes = "Вернет обновленные данные пользователя")
+    public User updateUser(@ApiParam(value = "Id пользователя", required = true) @PathVariable("id") int id,
                            @ApiParam(value = "Данные пользователя", required = true) @RequestBody User user)
     {
-        service.updateUser(id, user);
+        return service.updateUser(id, user);
     }
 
     /**
      * Удаляет пользователя
      * @param id id пользователя
+     * @return Возвращает id удаленного пользователя
      */
     @DeleteMapping(value = "/users/{id}")
-    @ApiOperation(value = "Удаление пользователя")
-    public void removeUser(@ApiParam(value = "Id пользователя", required = true) @PathVariable("id") int id)
+    @ApiOperation(value = "Удаление пользователя", notes = "Вернет Id удаленного пользователя")
+    public int removeUser(@ApiParam(value = "Id пользователя", required = true) @PathVariable("id") int id)
     {
         service.removeUser(id);
+        return id;
     }
 
     /**
@@ -135,12 +138,13 @@ public class UsersManagementController
      * Добавляет роль
      * Роль с указанным названием не должна существовать в БД
      * @param role данные роли
+     * @return Возвращает данные добавленной роли
      */
     @PostMapping(value = "/roles")
-    @ApiOperation(value = "Добавление роли")
-    public void addRole(@ApiParam(value = "Данные роли", required = true) @RequestBody Role role)
+    @ApiOperation(value = "Добавление роли", notes = "Вернет данные добавленной роли")
+    public Role addRole(@ApiParam(value = "Данные роли", required = true) @RequestBody Role role)
     {
-        service.addRole(role);
+        return service.addRole(role);
     }
 
     /**
@@ -148,13 +152,14 @@ public class UsersManagementController
      * Роль с указанным названием должна существовать в БД
      * @param roleName название роли
      * @param role     данные роли для обновления
+     * @return Возвращает обновленные данные роли
      */
     @PutMapping(value = "/roles/{role}")
-    @ApiOperation(value = "Обновление данных роли")
-    public void updateRole(@ApiParam(value = "Название роли", required = true) @PathVariable("role") String roleName,
+    @ApiOperation(value = "Обновление данных роли", notes = "Вернет обновленные данные роли")
+    public Role updateRole(@ApiParam(value = "Название роли", required = true) @PathVariable("role") String roleName,
                            @ApiParam(value = "Данные роли для обновления") @RequestBody Role role)
     {
-        service.updateRole(roleName, role);
+        return service.updateRole(roleName, role);
     }
 
     /**
@@ -162,10 +167,10 @@ public class UsersManagementController
      * @param role название роли
      */
     @DeleteMapping(value = "/roles/{role}")
-    @ApiOperation(value = "Удаление роли")
-    public void removeRole(@ApiParam(value = "Название роли", required = true) @PathVariable("role") String role)
+    @ApiOperation(value = "Удаление роли", notes = "Вернет название удаленной роли")
+    public String removeRole(@ApiParam(value = "Название роли", required = true) @PathVariable("role") String role)
     {
-        service.removeRole(role);
+        return service.removeRole(role);
     }
 
     /**
@@ -195,11 +200,11 @@ public class UsersManagementController
      * Добавляет пермиссию
      * Пермиссия с укзанными path и method не должна существовать в БД
      * @param permission данные премиссии
-     * @return id добавленной пермиссии
+     * @return Возвращает данные добавленной пермиссии
      */
     @PostMapping(value = "/permissions")
-    @ApiOperation(value = "Добавление пермиссии", notes = "Возвращает id добавленной пермиссии")
-    public int addPermission(@ApiParam(value = "Данные пермиссии", required = true) @RequestBody Permission permission)
+    @ApiOperation(value = "Добавление пермиссии", notes = "Вернет данные добавленной пермиссии")
+    public Permission addPermission(@ApiParam(value = "Данные пермиссии", required = true) @RequestBody Permission permission)
     {
         return service.addPermission(permission);
     }
@@ -209,13 +214,14 @@ public class UsersManagementController
      * Пермиссия с указанным id должна существовать в БД
      * @param idPermission id пермиссии
      * @param permission   данные пермиссии для обновления
+     * @return Возвращает обновленные данные пермиссии
      */
     @PutMapping(value = "/permissions/{id}")
-    @ApiOperation(value = "Обновление данных пермиссии")
-    public void updatePermission(@ApiParam(value = "Id пермиссии", required = true) @PathVariable("id") int idPermission,
+    @ApiOperation(value = "Обновление данных пермиссии", notes = "Вернет обновленные данные пермиссии")
+    public Permission updatePermission(@ApiParam(value = "Id пермиссии", required = true) @PathVariable("id") int idPermission,
                                  @ApiParam(value = "Данные пермиссии", required = true) @RequestBody Permission permission)
     {
-        service.updatePermission(idPermission, permission);
+        return service.updatePermission(idPermission, permission);
     }
 
     /**
@@ -223,10 +229,11 @@ public class UsersManagementController
      * @param idPermission id пермиссии
      */
     @DeleteMapping(value = "/permissions/{id}")
-    @ApiOperation(value = "Удаление пермиссии")
-    public void removePermission(@ApiParam(value = "Id пермиссии", required = true) @PathVariable("id") int idPermission)
+    @ApiOperation(value = "Удаление пермиссии", notes = "Вернет Id удаленной пермиссии")
+    public int removePermission(@ApiParam(value = "Id пермиссии", required = true) @PathVariable("id") int idPermission)
     {
         service.removePermission(idPermission);
+        return idPermission;
     }
 
     /**
@@ -255,7 +262,7 @@ public class UsersManagementController
     }
 
     /**
-     * Устанваливает указанные роли пользователю
+     * Устанавливает указанные роли пользователю
      * Все роли пользователя не указанные в списке будут удалены
      * @param userid id пользователя
      * @param roles
@@ -380,7 +387,7 @@ public class UsersManagementController
      */
     @PutMapping(value = "/roles", params = "idpermission")
     @ApiOperation(value =
-            "Указание ролей для пермиссии. Все роли не указанные в списке и прикрепленные к пермиссии " + "будут " +
+            "Указание ролей для пермиссии. Все роли не указанные в списке и прикрепленные к пермиссии будут " +
                     "откреплены от указанной пермиссии")
     public void setPermissionRoles(@ApiParam(value = "Id пермиссии", required = true) @RequestParam("idpermission") int idPermission,
                                    @ApiParam(value = "Список названий ролей", required = true) @RequestBody RoleNameList roles)
