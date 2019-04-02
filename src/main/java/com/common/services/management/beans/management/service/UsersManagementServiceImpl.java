@@ -67,31 +67,30 @@ public class UsersManagementServiceImpl
         return user;
     }
 
-    /**
-     * Добавляет пользователя
-     * Пользователя с указанным логином не должно быть в БД
-     * @param user данные пользователя
-     */
     @Override
-    public int addUser(User user)
+    public User addUser(User user)
     {
         validationUserName(user.getName());
         user.setName(prepareUserName(user.getName()));
-
         if (user.getPassword() == null)
         {
             user.setPassword("");
         }
         user.setPassword(preparePassword(user.getPassword()));
-        return usersManagementDao.addUser(user);
+        int id = usersManagementDao.addUser(user);
+        user.setId(id);
+        user.setPassword(null);
+        return user;
     }
 
     @Override
-    public void updateUser(int id, User user)
+    public User updateUser(int id, User user)
     {
         validationUserName(user.getName());
         user.setName(prepareUserName(user.getName()));
         usersManagementDao.updateUser(id, user);
+        user.setId(id);
+        return user;
     }
 
     @Override
@@ -100,11 +99,6 @@ public class UsersManagementServiceImpl
         usersManagementDao.removeUser(id);
     }
 
-    /**
-     * Возвращает список пользователей с их данными
-     * @param withRoles если флаг true данные пользователей будут содержать список их ролей
-     * @return Возвращает список пользователей с их данными
-     */
     @Override
     public List<User> getAllUsers(boolean withRoles)
     {
@@ -117,11 +111,6 @@ public class UsersManagementServiceImpl
         return users;
     }
 
-    /**
-     * Возвращает информацию об указанной роли
-     * @param rolename название роли
-     * @return возвращает информацию об указанной роли
-     */
     @Override
     public Role getRole(String rolename)
     {
@@ -132,11 +121,6 @@ public class UsersManagementServiceImpl
         return role;
     }
 
-    /**
-     * Возвращает список всех ролей
-     * @param withPermissions если флаг true роли будут содержать список назначенных им пермиссий
-     * @return возвращает список всех ролей
-     */
     @Override
     public List<Role> getAllRoles(boolean withPermissions)
     {
@@ -145,109 +129,71 @@ public class UsersManagementServiceImpl
         return roles;
     }
 
-    /**
-     * Добавляет роль
-     * Роль с указанным названием не должна существовать в БД
-     * @param role данные роли
-     */
     @Override
-    public void addRole(Role role)
+    public Role addRole(Role role)
     {
         validationRole(role.getName());
         role.setName(prepareRoleName(role.getName()));
         usersManagementDao.addRole(role);
+        return role;
     }
 
-    /**
-     * Обновляет данные роли
-     * Роль с указанным названием должна существовать в БД
-     * @param roleName название роли
-     * @param role     данные роли для обновления
-     */
     @Override
-    public void updateRole(String roleName, Role role)
+    public Role updateRole(String roleName, Role role)
     {
         validationRole(roleName);
         validationRole(role.getName());
         roleName = prepareRoleName(roleName);
         role.setName(prepareRoleName(role.getName()));
         usersManagementDao.updateRole(roleName, role);
+        return role;
     }
 
-    /**
-     * Удаляет роль
-     * @param role название роли
-     */
     @Override
-    public void removeRole(String role)
+    public String removeRole(String role)
     {
         validationRole(role);
         role = prepareRoleName(role);
         usersManagementDao.removeRole(role);
+        return role;
     }
 
-    /**
-     * Возвращает данные пермиссии
-     * @param idPermission id пермиссии
-     * @return возвращает данные пермиссии
-     */
     @Override
     public Permission getPermission(int idPermission)
     {
         return usersManagementDao.getPermission(idPermission);
     }
 
-    /**
-     * Возвращает список пермиссий
-     * @return возвращает список пермиссий
-     */
     @Override
     public List<Permission> getAllPermissions()
     {
         return usersManagementDao.getAllPermissions();
     }
 
-    /**
-     * Добавляет пермиссию
-     * Пермиссия с укзанными path и method не должна существовать в БД
-     * @param permission данные премиссии
-     * @return id добавленной пермиссии
-     */
     @Override
-    public int addPermission(Permission permission)
+    public Permission addPermission(Permission permission)
     {
         validationPermission(permission);
-        return usersManagementDao.addPermission(permission);
+        int id = usersManagementDao.addPermission(permission);
+        permission.setId(id);
+        return permission;
     }
 
-    /**
-     * Обновляет данные премиссии
-     * Пермиссия с указанным id должна существовать в БД
-     * @param idPermission id пермиссии
-     * @param permission   данные пермиссии для обновления
-     */
     @Override
-    public void updatePermission(int idPermission, Permission permission)
+    public Permission updatePermission(int idPermission, Permission permission)
     {
         validationPermission(permission);
         usersManagementDao.updatePermission(idPermission, permission);
+        permission.setId(idPermission);
+        return permission;
     }
 
-    /**
-     * Удаляет пермиссию
-     * @param idPermission id пермиссии
-     */
     @Override
     public void removePermission(int idPermission)
     {
         usersManagementDao.removePermission(idPermission);
     }
 
-    /**
-     * Возвращает список ролей указанного пользователя
-     * @param userId id пользователя
-     * @return возвращает список ролей пользователя
-     */
     @Override
     public List<Role> getUserRoles(int userId)
     {
@@ -264,12 +210,6 @@ public class UsersManagementServiceImpl
         usersManagementDao.addUserRoles(user.getName(), roles);
     }
 
-    /**
-     * Устанаваливает указанные роли пользователю
-     * Все роли пользователя не указанные в списке будут удалены
-     * @param userid id пользователя
-     * @param roles
-     */
     @Override
     public void setUserRoles(int userid, RoleNameList roles)
     {
@@ -279,12 +219,6 @@ public class UsersManagementServiceImpl
         usersManagementDao.setUserRoles(user.getName(), roles);
     }
 
-    /**
-     * Удаляет указанные роли у пользователя
-     * Указанные роли должны быть привязаны к пользователю
-     * @param userid id пользователя
-     * @param roles    список названий ролей
-     */
     @Override
     public void removeUserRoles(int userid, RoleNameList roles)
     {
@@ -294,11 +228,6 @@ public class UsersManagementServiceImpl
         usersManagementDao.removeUserRoles(user.getName(), roles);
     }
 
-    /**
-     * Возвращает список пользователей, имеющих указанную роль
-     * @param role название роли
-     * @return возвращает список пользователей, имеющих указанную роль
-     */
     @Override
     public List<User> getRoleUsers(String role)
     {
@@ -309,11 +238,6 @@ public class UsersManagementServiceImpl
         return users;
     }
 
-    /**
-     * Возвращает список пермиссий, привязанных к указанной роли
-     * @param role название роли
-     * @return возвращает список пермиссий, привязанных к указанной роли
-     */
     @Override
     public List<Permission> getRolePermissions(String role)
     {
@@ -322,11 +246,6 @@ public class UsersManagementServiceImpl
         return usersManagementDao.getRolePermissions(role);
     }
 
-    /**
-     * Возвращает список ролей, привязанных к указанной пермиссии
-     * @param idPermission - id пермиссии
-     * @return возвращает список ролей, привязанных к указанной пермиссии
-     */
     @Override
     public List<Role> getPermissionRoles(int idPermission)
     {
@@ -344,13 +263,6 @@ public class UsersManagementServiceImpl
         usersManagementDao.addRolePermissions(role, permissions);
     }
 
-    /**
-     * Устанавливает список пермиссий для роли
-     * Все пермиссии привязанные к роли и не входящие в список добавления будут откреплены от роли
-     * Список пермиссий может быть пустым
-     * @param role        название роли
-     * @param permissions список id пермиссий
-     */
     @Override
     public void setRolePermissions(String role, PermissionIdList permissions)
     {
@@ -360,11 +272,6 @@ public class UsersManagementServiceImpl
         usersManagementDao.setRolePermissions(role, permissions);
     }
 
-    /**
-     * Удаляет указанные премиссии у роли
-     * @param role        название роли
-     * @param permissions список id пермиссий
-     */
     @Override
     public void removeRolePermissions(String role, PermissionIdList permissions)
     {
@@ -382,13 +289,6 @@ public class UsersManagementServiceImpl
         usersManagementDao.addPermissionRoles(idPermission, roles);
     }
 
-    /**
-     * Устанавливает указанные роли для пермиссии
-     * Все роли не указанные в списке и прикрепленные к пермиссии будут откреплены от указанной пермиссии
-     * Список названий ролей может быть пустым
-     * @param idPermission id пермиссии
-     * @param roles        список названий ролей
-     */
     @Override
     public void setPermissionRoles(int idPermission, RoleNameList roles)
     {
@@ -397,11 +297,6 @@ public class UsersManagementServiceImpl
         usersManagementDao.setPermissionRoles(idPermission, roles);
     }
 
-    /**
-     * Открепляет указанные роли от пермиссии
-     * @param idPermission id пермиссии
-     * @param roles        список названий ролей
-     */
     @Override
     public void removePermissionRoles(int idPermission, RoleNameList roles)
     {
@@ -410,11 +305,6 @@ public class UsersManagementServiceImpl
         usersManagementDao.removePermissionRoles(idPermission, roles);
     }
 
-    /**
-     * Возвращает полную информацию о пользователе с перечислением его ролей и их пермиссий
-     * @param id id пользователя
-     * @return возвращает полную информацию о пользователе с перечислением его ролей и их пермиссий
-     */
     @Override
     public User getFullUserInfo(int id)
     {

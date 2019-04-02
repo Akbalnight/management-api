@@ -23,17 +23,18 @@ public interface UsersManagementService
      * Добавляет пользователя
      * Пользователя с указанным логином не должно быть в БД
      * @param user данные пользователя
-     * @return возваращает id добавленного пользователя
+     * @return Возвращает данные добавленного пользователя
      */
-    int addUser(User user);
+    User addUser(User user);
 
     /**
      * Обновляет данные пользователя
      * Пользователь с указанным id должен быть записан в БД
      * @param id   id пользователя
      * @param user данные пользователя
+     * @return Возвращает обновленные данные пользователя
      */
-    void updateUser(int id, User user);
+    User updateUser(int id, User user);
 
     /**
      * Удаляет пользователя
@@ -66,22 +67,25 @@ public interface UsersManagementService
      * Добавляет роль
      * Роль с указанным названием не должна существовать в БД
      * @param role данные роли
+     * @return Возвращает данные добавленной роли
      */
-    void addRole(Role role);
+    Role addRole(Role role);
 
     /**
      * Обновляет данные роли
      * Роль с указанным названием должна существовать в БД
      * @param roleName название роли
      * @param role     данные роли для обновления
+     * @return Возвращает обновленные данные роли
      */
-    void updateRole(String roleName, Role role);
+    Role updateRole(String roleName, Role role);
 
     /**
      * Удаляет роль
      * @param role название роли
+     * @return Возвращает название удаленной роли
      */
-    void removeRole(String role);
+    String removeRole(String role);
 
     /**
      * Возвращает данные пермиссии
@@ -100,17 +104,18 @@ public interface UsersManagementService
      * Добавляет пермиссию
      * Пермиссия с укзанными path и method не должна существовать в БД
      * @param permission данные премиссии
-     * @return id добавленной пермиссии
+     * @return Возвращает данные добавленной пермиссии
      */
-    int addPermission(Permission permission);
+    Permission addPermission(Permission permission);
 
     /**
      * Обновляет данные премиссии
      * Пермиссия с указанным id должна существовать в БД
      * @param idPermission id пермиссии
      * @param permission   данные пермиссии для обновления
+     * @return Возвращает обновленные данные пермиссии
      */
-    void updatePermission(int idPermission, Permission permission);
+    Permission updatePermission(int idPermission, Permission permission);
 
     /**
      * Удаляет пермиссию
@@ -133,7 +138,7 @@ public interface UsersManagementService
     void addUserRoles(int userId, RoleNameList roles);
 
     /**
-     * Устанваливает указанные роли пользователю
+     * Устанавливает указанные роли пользователю
      * Все роли пользователя не указанные в списке будут удалены
      * @param userid id пользователя
      * @param roles
