@@ -461,6 +461,15 @@ public class UsersManagementController
         service.changeUserPassword(userId, changePasswordObject);
     }
 
+    @PostMapping(value = "/users/{id}/resetPassword")
+    @ApiOperation(value = "Сброс пароля пользователя")
+    public void resetPassword(@ApiParam(value = "id", required = true) @PathVariable("id") int userId,
+                              @ApiParam(value = "Новый пароль пользователя", required = true) @RequestBody ChangePassword changePasswordObject)
+            throws IOException
+    {
+        service.resetUserPassword(userId, changePasswordObject);
+    }
+
     @GetMapping(value="/permissions/unlinked")
     @ApiOperation(value = "Получить все пермиссии не связанные с ролями пользователей")
     public List<Permission> getUnlinkedPermissions()

@@ -246,6 +246,13 @@ public interface UsersManagementService
     void changeUserPassword(int userId, ChangePassword changePasswordObject);
 
     /**
+     * Сброс пароля пользователя. Пользователю устанавливается указанный пароль
+     * @param userId               id пользователя
+     * @param changePasswordObject данные нового пароля пользователя
+     */
+    void resetUserPassword(int userId, ChangePassword changePasswordObject);
+
+    /**
      * Возвращает список всех LDAP групп со списками соответствующих им ролей
      * @param pageNumber Номер страницы
      * @param pageSize Количество групп на странице
