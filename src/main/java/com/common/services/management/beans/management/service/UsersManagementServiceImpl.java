@@ -8,7 +8,6 @@ import com.common.services.management.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -76,7 +75,7 @@ public class UsersManagementServiceImpl
         {
             user.setPassword("");
         }
-        user.setPassword(preparePassword(user.getPassword()));
+        user.setPassword(user.getPassword());
         int id = usersManagementDao.addUser(user);
         user.setId(id);
         user.setPassword(null);
@@ -369,12 +368,11 @@ public class UsersManagementServiceImpl
             throw serviceException.applyParameters(HttpStatus.BAD_REQUEST, ERROR_EMPTY_USER_PASSWORD);
         }
         String dbPassword = usersManagementDao.getUserPassword(userId);
-        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
-        if (!bCryptPasswordEncoder.matches(changePasswordObject.getOldPassword(), dbPassword))
+        if(!changePasswordObject.getOldPassword().equals(dbPassword))
         {
             throw serviceException.applyParameters(HttpStatus.CONFLICT, ERROR_NOT_VALID_USER_PASSWORD);
         }
-        usersManagementDao.setUserPassword(userId, bCryptPasswordEncoder.encode(changePasswordObject.getNewPassword()));
+        usersManagementDao.setUserPassword(userId, changePasswordObject.getNewPassword());
     }
 
     @Override

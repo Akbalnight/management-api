@@ -52,6 +52,6 @@ dependencies {
 	compile('org.springframework.boot:spring-boot-starter-jdbc')
 	compile('org.springframework.boot:spring-boot-starter-thymeleaf')
 	compile('com.zaxxer:HikariCP')
-	compile group: 'org.springframework.security', name: 'spring-security-crypto'
+	
 	compile group: 'org.springframework.ldap', name: 'spring-ldap-core'
 }

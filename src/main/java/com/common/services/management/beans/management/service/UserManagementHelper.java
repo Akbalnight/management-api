@@ -1,7 +1,5 @@
 package com.common.services.management.beans.management.service;
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,15 +55,5 @@ public class UserManagementHelper
     {
         String newName = name.toLowerCase().trim();
         return newName;
-    }
-
-    /**
-     * Хэширует пароль
-     * @param password пароль
-     * @return возвращает хэш пароля
-     */
-    public static String preparePassword(String password)
-    {
-        return new BCryptPasswordEncoder().encode(password);
     }
 }
