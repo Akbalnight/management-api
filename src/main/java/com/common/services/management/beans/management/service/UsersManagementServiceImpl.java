@@ -8,10 +8,12 @@ import com.common.services.management.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -368,9 +370,22 @@ public class UsersManagementServiceImpl
             throw serviceException.applyParameters(HttpStatus.BAD_REQUEST, ERROR_EMPTY_USER_PASSWORD);
         }
         String dbPassword = usersManagementDao.getUserPassword(userId);
-        if(!changePasswordObject.getOldPassword().equals(dbPassword))
+        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+        if (!bCryptPasswordEncoder.matches(new String(Base64
+                .getDecoder()
+                .decode(changePasswordObject.getOldPassword())), dbPassword))
         {
             throw serviceException.applyParameters(HttpStatus.CONFLICT, ERROR_NOT_VALID_USER_PASSWORD);
+        }
+        usersManagementDao.setUserPassword(userId, changePasswordObject.getNewPassword());
+    }
+
+    @Override
+    public void resetUserPassword(int userId, ChangePassword changePasswordObject)
+    {
+        if (changePasswordObject.getNewPassword() == null)
+        {
+            throw serviceException.applyParameters(HttpStatus.BAD_REQUEST, ERROR_EMPTY_USER_PASSWORD);
         }
         usersManagementDao.setUserPassword(userId, changePasswordObject.getNewPassword());
     }
