@@ -37,7 +37,7 @@ public class UserManagementHelper
      */
     public static List<String> prepareRolesNames(List<String> roles)
     {
-        List<String> newRoles = new ArrayList<String>();
+        List<String> newRoles = new ArrayList<>();
         for (String role : roles)
         {
             newRoles.add(prepareRoleName(role));
@@ -53,7 +53,8 @@ public class UserManagementHelper
      */
     public static String prepareUserName(String name)
     {
-        String newName = name.toLowerCase().trim();
-        return newName;
+        return name
+                .toLowerCase()
+                .trim();
     }
 }
