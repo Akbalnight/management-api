@@ -41,6 +41,7 @@ public class UsersManagementServiceImpl
     private static final String ERROR_ROLE_NAME_EMPTY = "error.auth.roleNameEmpty";
     private static final String ERROR_PERMISSION_PARAMS_EMPTY = "error.auth.permissionParamsEmpty";
     private static final String ERROR_ROLES_EMPTY = "error.auth.rolesEmpty";
+    private static final String ERROR_GROUP_EMPTY = "error.auth.groupEmpty";
     private static final String ERROR_PERMISSIONS_EMPTY = "error.auth.permissionsEmpty";
     private static final String ERROR_EMPTY_USER_PASSWORD = "error.auth.emptyUserPassword";
     private static final String ERROR_NOT_VALID_USER_PASSWORD = "error.auth.notValidUserPassword";
@@ -401,6 +402,7 @@ public class UsersManagementServiceImpl
     @Override
     public List<String> getRolesByLdapGroup(String group)
     {
+        validationGroup(group);
         return usersManagementDao.getRolesByLdapGroup(group);
     }
 
@@ -413,24 +415,32 @@ public class UsersManagementServiceImpl
     @Override
     public void addRolesToLdapGroup(String group, List<String> roles)
     {
+        validationGroup(group);
+        if (roles == null || roles.isEmpty())
+        {
+            throw serviceException.applyParameters(HttpStatus.BAD_REQUEST, ERROR_ROLES_EMPTY);
+        }
         usersManagementDao.addRolesToLdapGroup(group, prepareRolesNames(roles));
     }
 
     @Override
     public void setRolesToLdapGroup(String group, List<String> roles)
     {
+        validationGroup(group);
         usersManagementDao.setRolesToLdapGroup(group, prepareRolesNames(roles));
     }
 
     @Override
     public void removeRolesFromLdapGroup(String group, List<String> roles)
     {
+        validationGroup(group);
         usersManagementDao.removeRolesFromLdapGroup(group, prepareRolesNames(roles));
     }
 
     @Override
     public void clearLdapGroup(String group)
     {
+        validationGroup(group);
         usersManagementDao.clearLdapGroup(group);
     }
 
@@ -561,6 +571,18 @@ public class UsersManagementServiceImpl
         if (permissions == null || permissions.getIds() == null || permissions.getIds().size() == 0)
         {
             throw serviceException.applyParameters(HttpStatus.BAD_REQUEST, ERROR_PERMISSIONS_EMPTY);
+        }
+    }
+
+    /**
+     * Выбрасывает исключение {@link ServiceException} если название ldap группы не указано.
+     * @param group Название группы
+     */
+    private void validationGroup(String group)
+    {
+        if (group == null || group.trim().isEmpty())
+        {
+            throw serviceException.applyParameters(HttpStatus.BAD_REQUEST, ERROR_GROUP_EMPTY);
         }
     }
 }
