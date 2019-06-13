@@ -59,7 +59,7 @@ public class SwaggerApiReader
         Swagger swagger = readApi(info.getApiUrl());
         if (swagger == null)
         {
-            return Collections.emptyList();
+            return null;
         }
         String basePath = swagger.getBasePath();
         // Добавление названия сервиса к пути пермиссии

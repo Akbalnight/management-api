@@ -445,13 +445,13 @@ public class UsersManagementServiceImpl
     }
 
     @Override
-    public int addPermissions(List<Permission> permissions)
+    public int addPermissions(List<Permission> permissions, List<String> roles)
     {
         return usersManagementDao.addPermissions(permissions
                 .stream()
                 // Очистим пермиссии с одинаковыми method и path
-                .filter(distinctByKeys(Permission::getMethod,Permission::getPath))
-                .collect(Collectors.toList()));
+                .filter(distinctByKeys(Permission::getMethod, Permission::getPath))
+                .collect(Collectors.toList()), roles);
     }
 
     @Override

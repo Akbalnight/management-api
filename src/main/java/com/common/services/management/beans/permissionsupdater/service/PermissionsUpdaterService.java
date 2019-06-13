@@ -2,6 +2,8 @@ package com.common.services.management.beans.permissionsupdater.service;
 
 import com.common.services.management.beans.permissionsupdater.model.PermissionsCompare;
 
+import java.util.List;
+
 /**
  * PermissionsUpdaterService.java
  * Date: 13 марта 2019 г.
@@ -18,7 +20,14 @@ public interface PermissionsUpdaterService
 
     /**
      * Добавляет отсутсвующие в базе данных пермиссии из сервисов
+     * @param roles Список ролей пользователей
      * @return Возвращает количество добавленных пермиссий
      */
-    int mergePermissions();
+    int mergePermissions(List<String> roles);
+
+    /**
+     * Экспорт неиспользуемых пермиссий сервисов в json файлы с названием сервиса
+     * @return
+     */
+    List<String> exportPermissionsJSON();
 }

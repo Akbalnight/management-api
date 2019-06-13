@@ -3,10 +3,14 @@ package com.common.services.management.controllers;
 import com.common.services.management.beans.permissionsupdater.model.PermissionsCompare;
 import com.common.services.management.beans.permissionsupdater.service.PermissionsUpdaterService;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /**
  * PermissionsUpdaterController.java
@@ -30,9 +34,17 @@ public class PermissionsUpdaterController
     }
 
     @GetMapping(value = "/permissions/merge")
-    @ApiOperation(value = "Добавляет отсутсвующие в базе данных пермиссиии из сервисов")
-    public int mergePermissions()
+    @ApiOperation(value = "Добавляет отсутсвующие в базе данных пермиссии из сервисов",
+            notes = "Если указан список ролей, то все пермиссии будут назначены этим ролям")
+    public int mergePermissions(@ApiParam(value = "Список ролей", required = true) @RequestBody List<String> roles)
     {
-        return updaterService.mergePermissions();
+        return updaterService.mergePermissions(roles);
+    }
+
+    @GetMapping(value = "/permissions/export")
+    @ApiOperation(value = "Экспорт неиспользуемых пермиссий сервисов в json файлы с названием сервиса")
+    public List<String> exportPermissionsJSON()
+    {
+        return updaterService.exportPermissionsJSON();
     }
 }
