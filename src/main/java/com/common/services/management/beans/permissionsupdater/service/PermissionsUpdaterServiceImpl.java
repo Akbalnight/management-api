@@ -5,14 +5,17 @@ import com.common.services.management.beans.management.service.UsersManagementSe
 import com.common.services.management.beans.permissionsupdater.model.PermissionsCompare;
 import com.common.services.management.beans.servicesinfo.ServiceInfo;
 import com.common.services.management.beans.servicesinfo.ServicesInfoReader;
+import com.common.services.management.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -27,6 +30,9 @@ public class PermissionsUpdaterServiceImpl
 {
     @Autowired
     private ApiReader apiReader;
+
+    @Autowired
+    private Logger logger;
 
     @Autowired
     private UsersManagementService usersManagementService;
@@ -48,17 +54,78 @@ public class PermissionsUpdaterServiceImpl
     }
 
     @Override
-    public int mergePermissions()
+    public List<String> exportPermissionsJSON()
+    {
+        List<String> result = new ArrayList<>();
+        PermissionsCompare permissionsCompare = comparePermissions();
+        permissionsCompare
+                .getServicesPermissions()
+                .forEach((service, permissions) ->
+                {
+                    if (permissions != null)
+                    {
+                        exportPermissions(service, permissions);
+                        result.add(service + " : done");
+                    }
+                    else
+                    {
+                        result.add(service + " : FAILED");
+                    }
+                });
+        return result;
+    }
+
+    private void exportPermissions(String service, List<Permission> permissions)
+    {
+        Path path = Paths.get(service + ".json");
+        try (BufferedWriter writer = Files.newBufferedWriter(path))
+        {
+            for (int i = 0; i < permissions.size(); i++)
+            {
+                if (i > 0)
+                {
+                    writer.write(",");
+                    writer.newLine();
+                }
+                writer.write("  {");
+                writer.newLine();
+                writer.write("    \"description\": \"" + permissions.get(i).getDescription() + "\",");
+                writer.newLine();
+                writer.write("    \"method\": \"" + permissions.get(i).getMethod() + "\",");
+                writer.newLine();
+                writer.write("    \"path\": \"" + permissions.get(i).getPath() + "\",");
+                writer.newLine();
+                writer.write("    \"roles\": []");
+                writer.newLine();
+                writer.write("  }");
+            }
+        }
+        catch (IOException e)
+        {
+            logger.error("Ошибка при экспорте пермиссий в json exportPermissions", e);
+        }
+    }
+
+    @Override
+    public int mergePermissions(List<String> roles)
     {
         // Список пермиссий сервисов, отсутсвующих в базе данных
         PermissionsCompare permissionsCompare = comparePermissions();
         // Список пермиссий всех сервисов
         List<Permission> permissions = new ArrayList<>();
-        permissionsCompare.getServicesPermissions()
+        permissionsCompare
+                .getServicesPermissions()
                 .values()
-                .forEach(servicePermissions -> permissions.addAll(servicePermissions));
+                .forEach(servicePermissions ->
+                {
+                    if (servicePermissions != null)
+                    {
+                        permissions.addAll(servicePermissions);
+                    }
+                });
         // Добавим в БД пермисии, которые были найдены в сервисах, но не найдены в БД
-        return usersManagementService.addPermissions(permissions);
+        Integer count = usersManagementService.addPermissions(permissions, roles);
+        return count;
     }
 
     /**
@@ -71,9 +138,16 @@ public class PermissionsUpdaterServiceImpl
         Set<Permission> existingPermissionsDB = new HashSet<>();
         List<Permission> servicesPermissions = new ArrayList<>();
         List<Permission> existingPermissionsService = new ArrayList<>();
-        permissionsCompare.getServicesPermissions()
+        permissionsCompare
+                .getServicesPermissions()
                 .values()
-                .forEach(servicePermissions -> servicesPermissions.addAll(servicePermissions));
+                .forEach(servicePermissions ->
+                {
+                    if (servicePermissions != null)
+                    {
+                        servicesPermissions.addAll(servicePermissions);
+                    }
+                });
 
         // Если пермиссия из БД не должна участвововать в сравнении, пропустим её
         List<Permission> dbPermissions = permissionsCompare.getDbPermissions()
@@ -97,8 +171,16 @@ public class PermissionsUpdaterServiceImpl
                                 })
                 );
         // Очистим список пермиссий сервисов, которые были найдены в БД
-        permissionsCompare.getServicesPermissions().values()
-                .forEach(list -> list.removeAll(existingPermissionsService));
+        permissionsCompare
+                .getServicesPermissions()
+                .values()
+                .forEach(list ->
+                {
+                    if (list != null)
+                    {
+                        list.removeAll(existingPermissionsService);
+                    }
+                });
         // Очистим список пермиссий БД, которые были найдены в сервисах
         permissionsCompare.getDbPermissions().removeAll(existingPermissionsDB);
     }

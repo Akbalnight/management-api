@@ -1432,37 +1432,73 @@ public class UsersManagementDaoImpl
     }
 
     @Override
-    public int addPermissions(List<Permission> permissions)
+    public int addPermissions(List<Permission> permissions, List<String> roles)
     {
         if (permissions.size() == 0)
         {
             return 0;
         }
-        final String SQL_ADD_PERMISSION = "INSERT INTO permissions(description, path, method, json_data) VALUES " +
-                "(:description, :path, :method, cast(:jsonData AS JSON))";
-
-        List<Map<String, Object>> batchValues = new ArrayList<>(permissions.size());
-        for (Permission permission : permissions)
+        if (roles == null || roles.size() == 0)
         {
-            String json = null;
-            try
+            final String SQL_ADD_PERMISSION =
+                    "INSERT INTO permissions(description, path, method, json_data) VALUES (:description, :path, :method, cast(:jsonData AS JSON))";
+
+            List<Map<String, Object>> batchValues = new ArrayList<>(permissions.size());
+            for (Permission permission : permissions)
             {
-                json = jsonMapper.writeValueAsString(permission.getJsonData());
+                String json = null;
+                try
+                {
+                    json = jsonMapper.writeValueAsString(permission.getJsonData());
+                }
+                catch (JsonProcessingException e)
+                {
+                    logger.error(e);
+                }
+                MapSqlParameterSource params = new MapSqlParameterSource();
+                params.addValue("description", permission.getDescription());
+                params.addValue("path", permission.getPath());
+                params.addValue("method", permission
+                        .getMethod()
+                        .toString());
+                params.addValue("jsonData", json);
+                batchValues.add(params.getValues());
             }
-            catch (JsonProcessingException e)
-            {
-                logger.error(e);
-            }
-            MapSqlParameterSource params = new MapSqlParameterSource();
-            params.addValue("description", permission.getDescription());
-            params.addValue("path", permission.getPath());
-            params.addValue("method", permission.getMethod().toString());
-            params.addValue("jsonData", json);
-            batchValues.add(params.getValues());
+            int[] result = jdbcTemplate.batchUpdate(SQL_ADD_PERMISSION,
+                    batchValues.toArray(new Map[permissions.size()]));
+            // Количество добавленных записей
+            return (int) Arrays
+                    .stream(result)
+                    .filter(item -> item == 1)
+                    .count();
         }
-        int[] result = jdbcTemplate.batchUpdate(SQL_ADD_PERMISSION, batchValues.toArray(new Map[permissions.size()]));
-        // Количество добавленных записей
-        return (int) Arrays.stream(result).filter(item -> item == 1).count();
+        else
+        {
+            StringBuilder query = new StringBuilder();
+            permissions.forEach(p ->
+            {
+                query.append("INSERT INTO permissions (description,path,method,json_data) VALUES ('")
+                     .append(p.getDescription())
+                     .append("', '")
+                     .append(p.getPath())
+                     .append("', '")
+                     .append(p.getMethod())
+                     .append("', '")
+                     .append(p.getJsonData() == null ? "{}" : p.getJsonData())
+                     .append("');");
+                roles.forEach(r ->
+                {
+                    query.append("INSERT INTO role_permissions (role, id_permission) VALUES ('")
+                         .append(r)
+                         .append("', currval(pg_get_serial_sequence('permissions', 'id')));");
+                });
+            });
+
+            jdbcTemplate
+                    .getJdbcOperations()
+                    .execute(query.toString());
+        }
+        return permissions.size();
     }
 
     @Override

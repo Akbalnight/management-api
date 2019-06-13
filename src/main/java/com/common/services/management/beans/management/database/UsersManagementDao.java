@@ -293,9 +293,10 @@ public interface UsersManagementDao
     /**
      * Добавляет пермиссии в БД
      * @param permissions Список пермиссий для добавления
+     * @param roles Список ролей пользователей
      * @return Возвращает количество добавленных пермиссий
      */
-    int addPermissions(List<Permission> permissions);
+    int addPermissions(List<Permission> permissions, List<String> roles);
 
     /**
      * Возвращает все пермиссии не связанные с ролями пользователей
