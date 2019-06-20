@@ -1574,6 +1574,13 @@ public class UsersManagementDaoImpl
                     }
                     if(!lastName.isEmpty())
                     {
+                        //TODO доработать ui
+                        user.setFullName(firstName);
+                        user.setShortName((lastName + " ") + firstName.substring(firstName.indexOf(" ") + 1,
+                                firstName.indexOf(" ") + 2) + "." + (middleName.isEmpty() ? "" :
+                                (middleName.charAt(0) + ".")).trim());
+
+                        /*
                         user.setFullName((
                                         (lastName.isEmpty() ? "" : (lastName + " ")) +
                                         (firstName.isEmpty() ? "" : (firstName + " ")) +
@@ -1583,7 +1590,7 @@ public class UsersManagementDaoImpl
                                         (lastName.isEmpty() ? "" : (lastName + " ")) +
                                         (firstName.isEmpty() ? "" : (firstName.charAt(0)+ ".")) +
                                         (middleName.isEmpty() ? "" : (middleName.charAt(0) + "."))
-                                ).trim());
+                                ).trim());*/
                     }
                 }
                 catch (Exception e)
