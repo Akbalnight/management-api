@@ -444,6 +444,7 @@ public class UsersManagementServiceImpl
         usersManagementDao.clearLdapGroup(group);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public int addPermissions(List<Permission> permissions, List<String> roles)
     {
@@ -469,6 +470,7 @@ public class UsersManagementServiceImpl
     /**
      * Очищает дубликаты пермиссий в списке(по method, path)
      */
+    @SuppressWarnings("unchecked")
     private static <T> Predicate<T> distinctByKeys(Function<? super T, ?>... keyExtractors)
     {
         final Map<List<?>, Boolean> seen = new ConcurrentHashMap<>();
