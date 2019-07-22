@@ -1431,6 +1431,7 @@ public class UsersManagementDaoImpl
         jdbcTemplate.update(SQL_REMOVE_ROLES_FROM_LDAP_GROUPS, params);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public int addPermissions(List<Permission> permissions, List<String> roles)
     {
