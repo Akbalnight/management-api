@@ -38,6 +38,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
 
+import static com.common.services.management.beans.management.service.UsersManagementService.*;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 
@@ -956,7 +957,6 @@ public class UsersManagementDaoImpl
         }
     }
 
-
     /**
      * Удаляет указанные премиссии у роли
      * @param role        название роли
@@ -1560,28 +1560,21 @@ public class UsersManagementDaoImpl
                     Map<String, Object> jsonData = jsonMapper.readValue(jsonString, typeRef);
                     for (Map.Entry<String, Object> entry : jsonData.entrySet())
                     {
-                        if (entry.getKey().equals("firstName"))
+                        if (entry.getKey().equals(FIRST_NAME))
                         {
                             firstName = entry.getValue().toString();
                         }
-                        else if (entry.getKey().equals("lastName"))
+                        else if (entry.getKey().equals(LAST_NAME))
                         {
                             lastName = entry.getValue().toString();
                         }
-                        else if (entry.getKey().equals("middleName"))
+                        else if (entry.getKey().equals(MIDDLE_NAME))
                         {
                             middleName = entry.getValue().toString();
                         }
                     }
-                    if(!lastName.isEmpty())
+                    if (!lastName.isEmpty())
                     {
-                        //TODO доработать ui
-                        user.setFullName(firstName);
-                        user.setShortName((lastName + " ") + firstName.substring(firstName.indexOf(" ") + 1,
-                                firstName.indexOf(" ") + 2) + "." + (middleName.isEmpty() ? "" :
-                                (middleName.charAt(0) + ".")).trim());
-
-                        /*
                         user.setFullName((
                                         (lastName.isEmpty() ? "" : (lastName + " ")) +
                                         (firstName.isEmpty() ? "" : (firstName + " ")) +
@@ -1591,7 +1584,7 @@ public class UsersManagementDaoImpl
                                         (lastName.isEmpty() ? "" : (lastName + " ")) +
                                         (firstName.isEmpty() ? "" : (firstName.charAt(0)+ ".")) +
                                         (middleName.isEmpty() ? "" : (middleName.charAt(0) + "."))
-                                ).trim());*/
+                                ).trim());
                     }
                 }
                 catch (Exception e)

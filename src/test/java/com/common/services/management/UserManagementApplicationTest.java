@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.*;
 
+import static com.common.services.management.beans.management.service.UsersManagementService.*;
 import static org.springframework.test.util.AssertionErrors.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -65,7 +66,7 @@ public class UserManagementApplicationTest
         user.setEmail("email");
         user.setPassword("password");
         Map<String, Object> jsonObject = new HashMap<>();
-        jsonObject.put("firstName", "firstName");
+        jsonObject.put(FIRST_NAME, FIRST_NAME);
         user.setJsonData(jsonObject);
         return user;
     }
@@ -563,5 +564,142 @@ public class UserManagementApplicationTest
 
         // Связи удалены
         assertEquals("Очистка всех связей LDAP группы с ролями", 0, JdbcTestUtils.countRowsInTable(jdbcTemplate, TABLE_LDAP_GROUP_ROLES));
+    }
+
+    /**
+     * Тестирование метода заполнения ФИО пользователя при его добавлении/изменении
+     * @throws Exception
+     */
+    @Test
+    public void testFillingFullUserName() throws Exception
+    {
+        JdbcTestUtils.deleteFromTables(jdbcTemplate, TABLE_USERS);
+
+        // Проверка FIRST_NAME = "Фамилия Имя"
+        User user = getTestUser();
+        Map<String, Object> jsonObject = user.getJsonData();
+        jsonObject.put(FIRST_NAME, "Фамилия Имя");
+
+        String json = jsonMapper.writeValueAsString(user);
+        // Добавление User
+        String userJson = mockMvc
+                .perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding(UTF8)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        User addedUser = jsonMapper.readValue(userJson, User.class);
+        // User добавлен в базу
+        assertEquals("Добавление пользователя", 1, JdbcTestUtils.countRowsInTable(jdbcTemplate, TABLE_USERS));
+
+        // Получение User
+        user.setId(addedUser.getId());
+        user.setPassword(null);
+        user.getJsonData().put(FIRST_NAME, "Имя");
+        user.getJsonData().put(LAST_NAME, "Фамилия");
+        user.getJsonData().put(MIDDLE_NAME, "");
+        json = jsonMapper.writeValueAsString(user);
+        mockMvc
+                .perform(get("/users/" + user.getId()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(json));
+
+        // Проверка FIRST_NAME = "Фамилия Имя Отчество"
+        JdbcTestUtils.deleteFromTables(jdbcTemplate, TABLE_USERS);
+        jsonObject = user.getJsonData();
+        jsonObject.put(FIRST_NAME, "Фамилия Имя Отчество");
+        jsonObject.remove(LAST_NAME);
+        jsonObject.remove(MIDDLE_NAME);
+
+        json = jsonMapper.writeValueAsString(user);
+        userJson = mockMvc
+                .perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding(UTF8)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        addedUser = jsonMapper.readValue(userJson, User.class);
+
+        user.setId(addedUser.getId());
+        user.setPassword(null);
+        user.getJsonData().put(FIRST_NAME, "Имя");
+        user.getJsonData().put(LAST_NAME, "Фамилия");
+        user.getJsonData().put(MIDDLE_NAME, "Отчество");
+        json = jsonMapper.writeValueAsString(user);
+        mockMvc
+                .perform(get("/users/" + user.getId()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(json));
+
+        // Проверка FIRST_NAME = "Фамилия"
+        JdbcTestUtils.deleteFromTables(jdbcTemplate, TABLE_USERS);
+        jsonObject = user.getJsonData();
+        jsonObject.put(FIRST_NAME, "Фамилия");
+        jsonObject.remove(LAST_NAME);
+        jsonObject.remove(MIDDLE_NAME);
+
+        json = jsonMapper.writeValueAsString(user);
+        userJson = mockMvc
+                .perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding(UTF8)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        addedUser = jsonMapper.readValue(userJson, User.class);
+
+        user.setId(addedUser.getId());
+        user.setPassword(null);
+        user.getJsonData().put(FIRST_NAME, "Фамилия");
+        user.getJsonData().put(LAST_NAME, "");
+        user.getJsonData().put(MIDDLE_NAME, "");
+        json = jsonMapper.writeValueAsString(user);
+        mockMvc
+                .perform(get("/users/" + user.getId()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(json));
+
+        // Проверка FIRST_NAME = "Имя" LAST_NAME = "Фамилия" MIDDLE_NAME = "Отчество"
+        JdbcTestUtils.deleteFromTables(jdbcTemplate, TABLE_USERS);
+        jsonObject = user.getJsonData();
+        jsonObject.put(FIRST_NAME, "Имя");
+        jsonObject.put(LAST_NAME, "Фамилия");
+        jsonObject.put(MIDDLE_NAME, "Отчество");
+
+        json = jsonMapper.writeValueAsString(user);
+        userJson = mockMvc
+                .perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding(UTF8)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        addedUser = jsonMapper.readValue(userJson, User.class);
+
+        user.setId(addedUser.getId());
+        user.setPassword(null);
+        user.getJsonData().put(FIRST_NAME, "Имя");
+        user.getJsonData().put(LAST_NAME, "Фамилия");
+        user.getJsonData().put(MIDDLE_NAME, "Отчество");
+        json = jsonMapper.writeValueAsString(user);
+        mockMvc
+                .perform(get("/users/" + user.getId()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(json));
+
     }
 }

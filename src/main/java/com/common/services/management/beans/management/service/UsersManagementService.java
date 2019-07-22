@@ -12,6 +12,10 @@ import java.util.List;
  */
 public interface UsersManagementService
 {
+    String FIRST_NAME = "firstName";
+    String LAST_NAME = "lastName";
+    String MIDDLE_NAME = "middleName";
+
     /**
      * Возвращает данные пользователя с указанным id
      * @param id id пользователя
