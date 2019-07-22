@@ -12,10 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -79,10 +76,78 @@ public class UsersManagementServiceImpl
             user.setPassword("");
         }
         user.setPassword(user.getPassword());
+        parseFullUserName(user);
         int id = usersManagementDao.addUser(user);
         user.setId(id);
         user.setPassword(null);
         return user;
+    }
+
+    /**
+     * Парсинг ФИО пользователя из поля firstName
+     * Если lastName не указано, то поля firstName, lastName и middleName заполняются из поля firstName.
+     * Разделитель - пробел
+     * @param user Данные пользователя
+     */
+    private void parseFullUserName(User user)
+    {
+        Map<String, Object> jsonData = user.getJsonData();
+        if (jsonData == null)
+        {
+            return;
+        }
+        String firstName = "";
+        String lastName = "";
+        String middleName = "";
+
+        try
+        {
+            for (Map.Entry<String, Object> entry : jsonData.entrySet())
+            {
+                if (entry.getKey().equals(FIRST_NAME))
+                {
+                    firstName = entry.getValue().toString().trim();
+                }
+                else if (entry.getKey().equals(LAST_NAME))
+                {
+                    lastName = entry.getValue().toString().trim();
+                }
+                else if (entry.getKey().equals(MIDDLE_NAME))
+                {
+                    middleName = entry.getValue().toString().trim();
+                }
+            }
+            if (lastName.isEmpty())// Если lastName не заполнено, распарсим поле firstName
+            {
+                int index = firstName.indexOf(" ");
+                if (index > 0)
+                {
+                    if (firstName.lastIndexOf(" ") == index)// в формате "Фамилия Имя"
+                    {
+                        lastName = firstName.substring(0, index).trim();
+                        firstName = firstName.substring(index).trim();
+                    }
+                    else // в формате "Фамилия Имя Отчество"
+                    {
+                        String fullName = firstName;
+                        lastName = fullName.substring(0, index).trim();
+                        fullName = fullName.substring(index).trim();
+
+                        index = fullName.indexOf(" ");
+                        firstName = fullName.substring(0, index).trim();
+                        middleName = fullName.substring(index).trim();
+                    }
+                }
+            }
+            jsonData.put(FIRST_NAME, firstName);
+            jsonData.put(LAST_NAME, lastName);
+            jsonData.put(MIDDLE_NAME, middleName);
+        }
+        catch (Exception e)
+        {
+            logger.error("Ошибка парсинга ФИО пользователя", e);
+        }
+        user.setJsonData(jsonData);
     }
 
     @Override
@@ -90,6 +155,7 @@ public class UsersManagementServiceImpl
     {
         validationUserName(user.getName());
         user.setName(prepareUserName(user.getName()));
+        parseFullUserName(user);
         usersManagementDao.updateUser(id, user);
         user.setId(id);
         return user;
