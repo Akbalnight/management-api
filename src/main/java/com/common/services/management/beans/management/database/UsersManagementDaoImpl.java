@@ -818,14 +818,17 @@ public class UsersManagementDaoImpl
                 permission.setMethod(rs.getString("method"));
 
                 String jsonString = rs.getString("json_data");
-                try
+                if (jsonString != null)
                 {
-                    PermissionJsonObject jsonData = jsonMapper.readValue(jsonString, PermissionJsonObject.class);
-                    permission.setJsonData(jsonData);
-                }
-                catch (IOException e)
-                {
-                    logger.error(e);
+                    try
+                    {
+                        PermissionJsonObject jsonData = jsonMapper.readValue(jsonString, PermissionJsonObject.class);
+                        permission.setJsonData(jsonData);
+                    }
+                    catch (IOException e)
+                    {
+                        logger.error(e);
+                    }
                 }
                 return permission;
             }

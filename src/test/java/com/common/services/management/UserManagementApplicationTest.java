@@ -332,13 +332,39 @@ public class UserManagementApplicationTest
         mockMvc.perform(get("/roles").param("userid", user.getId().toString())).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
                 json(json));
 
+        // Изменение LDAP ролей пользователя
+        Role role2 = getTestRole();
+        role2.setName("ROLE_TEST3");
+        RoleJsonObject roleJsonObject = new RoleJsonObject();
+        roleJsonObject.setLdap(true);
+        role2.setJsonData(roleJsonObject);
+        json = jsonMapper.writeValueAsString(role2);
+        mockMvc.perform(post("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json)).andExpect(status().isOk());
+        roleNames.setRoles(Arrays.asList(new String[]{role.getName(), role2.getName()}));
+        json = jsonMapper.writeValueAsString(roleNames);
+        mockMvc.perform(put("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("userid", user.getId().toString())).andExpect(status().isOk());
+        role2.setPermissions(null);
+        roles = Arrays.asList(new Role[]{role, role2});
+        json = jsonMapper.writeValueAsString(roles);
+        mockMvc.perform(get("/roles").param("userid", user.getId().toString())).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
+                                                                                                                                                                                                              json(json));
+        roleNames.setRoles(Collections.singletonList(role.getName()));
+        json = jsonMapper.writeValueAsString(roleNames);
+        mockMvc.perform(put("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("userid", user.getId().toString())).andExpect(status().isOk());
+        json = jsonMapper.writeValueAsString(roles);
+        mockMvc.perform(get("/roles").param("userid", user.getId().toString())).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
+                                                                                                                                                                                                                 json(json));
+
+
         // Удаление связи роли и пользователя
         roleNames.setRoles(Collections.singletonList(role.getName()));
         json = jsonMapper.writeValueAsString(roleNames);
         mockMvc.perform(delete("/roles").contentType(MediaType.APPLICATION_JSON).characterEncoding(UTF8).content(json).param("userid", user.getId().toString())).andExpect(status().isOk());
+        roles = Collections.singletonList(role2);
+        json = jsonMapper.writeValueAsString(roles);
         mockMvc.perform(get("/roles").param("userid", user.getId().toString())).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().
-                json("[]"));
-        assertEquals("Удаление связи пользователя и роли", 0, JdbcTestUtils.countRowsInTable(jdbcTemplate,
+                json(json));
+        assertEquals("Удаление связи пользователя и роли", 1, JdbcTestUtils.countRowsInTable(jdbcTemplate,
                 TABLE_USER_ROLES));
     }
 

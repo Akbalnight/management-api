@@ -284,6 +284,17 @@ public class UsersManagementServiceImpl
         validationRolesNamesList(roles, true);
         roles.setRoles(prepareRolesNames(roles.getRoles()));
         User user = usersManagementDao.getUser(userid);
+
+        // Получим роли пользователя, назначенные из LDAP
+        List<String> ldapRoles = usersManagementDao.getUserRoles(user.getName())
+                                                   .stream()
+                                                   .filter(role -> role.getJsonData() != null
+                                                           && role.getJsonData().getLdap() != null
+                                                           && role.getJsonData().getLdap())
+                                                   .map(Role::getName)
+                                                   .collect(Collectors.toList());
+        roles.getRoles()
+             .addAll(ldapRoles);
         usersManagementDao.setUserRoles(user.getName(), roles);
     }
 
