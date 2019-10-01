@@ -1,5 +1,8 @@
 package com.common.services.management.beans.management.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -8,13 +11,17 @@ import java.util.Map;
  * Users: amatveev
  * Description: Класс для описания json объекта роли
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RoleJsonObject
 {
     /**
+     * true если роль назначается пользователю из LDAP
+     */
+    private Boolean isLdap;
+    /**
      * Список объектов для сервисов
      */
-
-    private Map<String, String> objects;
+    private Map<String, String> objects = new HashMap<>();
     /**
      * Конструктор по умолчанию
      */
@@ -30,5 +37,15 @@ public class RoleJsonObject
     public void setObjects(Map<String, String> objects)
     {
         this.objects = objects;
+    }
+
+    public Boolean getLdap()
+    {
+        return isLdap;
+    }
+
+    public void setLdap(Boolean ldap)
+    {
+        isLdap = ldap;
     }
 }
