@@ -1,1 +1,5 @@
 rootProject.name = 'management'
+
+include ':auth-api'
+
+project(':auth-api').projectDir = new File(settingsDir, './auth-api')

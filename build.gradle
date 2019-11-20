@@ -4,6 +4,7 @@ buildscript {
 
 		appVersion = "1.0."
         buildNumber = (System.getenv("BUILD_NUMBER")?.toString()?.toInteger() ?: 1)
+      	appName = 'management.jar'
 	}
 	repositories {
         maven { url "https://plugins.gradle.org/m2/" }	
@@ -30,13 +31,13 @@ repositories {
 	mavenCentral()
 }
 
+bootJar { archiveName = appName }
+
 task bootJarCustom (type: Copy, dependsOn:bootJar){
     from "build/libs"
     into "./build"
-    include (project.name + "-" + project.version + ".jar")
-    rename (project.name + "-" + project.version + ".jar", project.name + ".jar")
+    include (appName)
 }
-
 configure(bootJarCustom) {
     group = BasePlugin.BUILD_GROUP
     description = 'Assembles bootJar task and copy wars to build directory of root project'
@@ -44,6 +45,10 @@ configure(bootJarCustom) {
 
 dependencies {
 	springBoot { buildInfo() }
+    println("AUTH_API_BUILD ${System.getenv("AUTH_API_BUILD")?.toString()}")
+    if (System.getenv("AUTH_API_BUILD")?.toBoolean()){
+        compile project(":auth-api")
+    }
 	implementation('org.springframework.boot:spring-boot-starter-web')
 	runtimeOnly('org.postgresql:postgresql')
 	testImplementation('org.springframework.boot:spring-boot-starter-test')
