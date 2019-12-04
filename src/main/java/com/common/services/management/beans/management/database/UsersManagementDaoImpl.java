@@ -5,6 +5,7 @@ import com.common.services.management.beans.serv.exceptions.NotFoundException;
 import com.common.services.management.beans.serv.exceptions.ServiceException;
 import com.common.services.management.beans.serv.exceptions.UserNotFoundException;
 import com.common.services.management.datasource.DataSourceManager;
+import com.common.services.management.filters.UsersFilter;
 import com.common.services.management.logging.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -15,6 +16,8 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -26,6 +29,8 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
@@ -64,6 +69,8 @@ public class UsersManagementDaoImpl
     private static final String SQL_VALIDATE_PERMISSIONS = "SELECT id FROM permissions LIMIT 1";
     private static final String SQL_VALIDATE_USER_ROLES = "SELECT username FROM user_roles LIMIT 1";
     private static final String SQL_VALIDATE_ROLE_PERMISSIONS = "SELECT id_permission FROM role_permissions LIMIT 1";
+
+    private static final String PAGINATION = " LIMIT :pageSize OFFSET :offset";
 
 
     private static final String SQL_INSERT_PERMISSION_ROLES =
@@ -384,10 +391,75 @@ public class UsersManagementDaoImpl
         }
     }
 
-    private List<User> getAllUsers()
+    private List<User> getAllUsers(UsersFilter filter, Pageable pageable)
     {
-        final String SQL_GET_ALL_USERS = "SELECT username, user_id, enabled, email, json_data, ldap FROM users";
-        return jdbcTemplate.query(SQL_GET_ALL_USERS, new RowMapper<User>()
+        String sql = "SELECT username, user_id, enabled, email, json_data, ldap FROM users";
+        String condition = "";
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        if (filter != null && !filter.isEmpty())
+        {
+            condition = " WHERE 1=1 ";
+            if (!CollectionUtils.isEmpty(filter.getUserIds()))
+            {
+                params.addValue("userIds", filter.getUserIds());
+                if (filter.getIsIncludedUsers() == null || filter.getIsIncludedUsers())
+                {
+                    condition += " AND user_id IN (:userIds) ";
+                }
+                else
+                {
+                    condition += " AND user_id NOT IN (:userIds) ";
+                }
+            }
+
+            if (!CollectionUtils.isEmpty(filter.getJsonDataFilters()))
+            {
+                for (Map.Entry<String, List<Object>> entry : filter.getJsonDataFilters().entrySet())
+                {
+                    if (CollectionUtils.isEmpty(entry.getValue()))
+                    {
+                        throw serviceException.applyParameters("Не указаны параметры фильтра для поля jsonData : ", entry.getKey());
+                    }
+                    String jsonField = entry.getKey();
+                    condition += " AND json_data ->> '" + jsonField + "' IN (:" + jsonField + ")";
+                    params.addValue(jsonField, entry.getValue());
+                }
+            }
+        }
+
+        String order = "";
+        String pagination = "";
+        if (pageable != null)
+        {
+            if(pageable.getSort().isSorted())
+            {
+                Sort.Order sortField = pageable.getSort().get().findFirst().get();
+
+                if (sortField.getProperty().equals("username") || sortField.getProperty().equals("user_id"))
+                {
+                    order += " ORDER BY " + sortField.getProperty() + " " + sortField.getDirection();
+                }
+                else
+                {
+                    order += " ORDER BY json_data->>'" + sortField.getProperty() + "' " + sortField.getDirection();
+                }
+            }
+            else
+            {
+                order += " ORDER BY user_id ";
+            }
+            if (!StringUtils.isEmpty(pageable.getPageSize()) && !StringUtils.isEmpty(pageable.getPageNumber()))
+            {
+                params.addValue("pageSize", pageable.getPageSize());
+                params.addValue("offset", pageable.getOffset());
+                pagination += PAGINATION;
+            }
+        }
+
+        sql += condition;
+        sql += order;
+        sql += pagination;
+        return jdbcTemplate.query(sql, params, new RowMapper<User>()
         {
             @Override
             public User mapRow(ResultSet rs, int rowNum) throws SQLException
@@ -418,14 +490,16 @@ public class UsersManagementDaoImpl
     /**
      * Возвращает список пользователей с их данными
      * @param withRoles если флаг true данные пользователей будут содержать список их ролей
+     * @param filter
+     * @param pageable
      * @return Возвращает список пользователей с их данными
      */
     @Override
-    public List<User> getAllUsers(boolean withRoles)
+    public List<User> getAllUsers(boolean withRoles, UsersFilter filter, Pageable pageable)
     {
         if (!withRoles)
         {
-            return getAllUsers();
+            return getAllUsers(filter, pageable);
         }
 
         final String SQL_GET_ALL_USERS_WITH_ROLES = "SELECT u.username, u.user_id, u.enabled, u.email, u" +

@@ -6,11 +6,16 @@ import com.common.services.management.beans.management.service.UsersManagementSe
 import com.common.services.management.beans.serv.exceptions.ServiceException;
 import com.common.services.management.beans.serv.resourcemanager.ResourceManager;
 import com.common.services.management.details.Details;
+import com.common.services.management.filters.UsersFilter;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -61,10 +66,44 @@ public class UsersManagementController
      */
     @ApiOperation(value = "Получение списка пользователей с их данными")
     @GetMapping(value = "/users")
-    public List<User> getAllUsersWithRoles(@ApiParam(value =
-            "Если флаг true данные пользователей будут содержать список их ролей", required = false) @RequestParam(value = "with_roles", defaultValue = "false") boolean withRoles)
+    public List<User> getAllUsersWithRoles(
+            @ApiParam(value = "Если флаг true данные пользователей будут содержать список их ролей", required = false)
+            @RequestParam(value = "with_roles", defaultValue = "false") boolean withRoles,
+            @RequestBody(required = false) UsersFilter filter,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) List<String> sort)
     {
-        return service.getAllUsers(withRoles);
+        return service.getAllUsers(withRoles, filter, getPageable(page, size, sort));
+    }
+
+    private Pageable getPageable(Integer page, Integer size, List<String> sortParams)
+    {
+        Sort sort = getSort(sortParams);
+        if (page != null && size != null)
+        {
+            return PageRequest.of(page, size, sort);
+        }
+        else
+        {
+            return PageRequest.of(0, 1000, sort);
+        }
+    }
+
+    private Sort getSort(List<String> sortParams)
+    {
+        if (!CollectionUtils.isEmpty(sortParams))
+        {
+            if (sortParams.size() > 1)
+            {
+                return Sort.by(Sort.Direction.fromString(sortParams.get(1)), sortParams.get(0));
+            }
+            else
+            {
+                return Sort.by(sortParams.get(0));
+            }
+        }
+        return Sort.unsorted();
     }
 
     /**
