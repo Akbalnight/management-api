@@ -4,15 +4,20 @@ import com.common.services.management.beans.management.database.UsersManagementD
 import com.common.services.management.beans.management.model.*;
 import com.common.services.management.beans.serv.exceptions.ServiceException;
 import com.common.services.management.beans.serv.exceptions.UserNotFoundException;
+import com.common.services.management.filters.UsersFilter;
 import com.common.services.management.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -168,14 +173,14 @@ public class UsersManagementServiceImpl
     }
 
     @Override
-    public List<User> getAllUsers(boolean withRoles)
+    public List<User> getAllUsers(boolean withRoles, UsersFilter filter, Pageable pageable)
     {
-        List<User> users = usersManagementDao.getAllUsers(withRoles);
+        List<User> users = usersManagementDao.getAllUsers(withRoles, filter, pageable);
         if (withRoles)
         {
             users.forEach(user -> user.getRoles().sort(comparing(Role::getName)));
+            users.sort(comparing(User::getId));
         }
-        users.sort(comparing(User::getId));
         return users;
     }
 
@@ -568,7 +573,7 @@ public class UsersManagementServiceImpl
     {
         // Список пользователей которые есть в БД, но нет в LDAP
         List<User> users =
-                usersManagementDao.getAllUsers(false).stream().filter(user -> !usernames.contains(user.getName())).collect(Collectors.toList());
+                usersManagementDao.getAllUsers(false, null, null).stream().filter(user -> !usernames.contains(user.getName())).collect(Collectors.toList());
 
         // Список пользователей которые были в ldap и были enabled
         users = users.stream().filter(user -> user.getLdap() && user.isEnabled()).collect(Collectors.toList());

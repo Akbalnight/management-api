@@ -58,6 +58,7 @@ dependencies {
 	compile('org.springframework.boot:spring-boot-starter-thymeleaf')
 	compile('com.zaxxer:HikariCP')
 	compile group: 'org.springframework.security', name: 'spring-security-crypto'
+	compile group: 'org.springframework.data', name: 'spring-data-commons', version: '2.1.4.RELEASE'
 	
 	compile group: 'org.springframework.ldap', name: 'spring-ldap-core'
 }

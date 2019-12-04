@@ -1,6 +1,8 @@
 package com.common.services.management.beans.management.database;
 
 import com.common.services.management.beans.management.model.*;
+import com.common.services.management.filters.UsersFilter;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -78,9 +80,11 @@ public interface UsersManagementDao
     /**
      * Возвращает список пользователей с их данными
      * @param withRoles если флаг true данные пользователей будут содержать список их ролей
+     * @param filter
+     * @param pageable
      * @return Возвращает список пользователей с их данными
      */
-    List<User> getAllUsers(boolean withRoles);
+    List<User> getAllUsers(boolean withRoles, UsersFilter filter, Pageable pageable);
 
     /**
      * Обновляет данные роли
