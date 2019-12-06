@@ -59,22 +59,24 @@ public class UsersManagementController
         return user;
     }
 
-    /**
-     * Возвращает список пользователей с их данными
-     * @param withRoles если флаг true данные пользователей будут содержать список их ролей
-     * @return Возвращает список пользователей с их данными
-     */
-    @ApiOperation(value = "Получение списка пользователей с их данными")
-    @GetMapping(value = "/users")
-    public List<User> getAllUsersWithRoles(
-            @ApiParam(value = "Если флаг true данные пользователей будут содержать список их ролей", required = false)
-            @RequestParam(value = "with_roles", defaultValue = "false") boolean withRoles,
+    @ApiOperation(value = "Получение списка пользователей по фильтру")
+    @PostMapping(value = "/users/filter")
+    public List<User> getAllUsersByFilter(
             @RequestBody(required = false) UsersFilter filter,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) List<String> sort)
     {
-        return service.getAllUsers(withRoles, filter, getPageable(page, size, sort));
+        return service.getAllUsers(false, filter, getPageable(page, size, sort));
+    }
+
+    @ApiOperation(value = "Получение списка пользователей с их данными")
+    @GetMapping(value = "/users")
+    public List<User> getAllUsersWithRoles(
+            @ApiParam(value = "Если флаг true данные пользователей будут содержать список их ролей", required = false)
+            @RequestParam(value = "with_roles", defaultValue = "false") boolean withRoles)
+    {
+        return service.getAllUsers(withRoles, null, null);
     }
 
     private Pageable getPageable(Integer page, Integer size, List<String> sortParams)
