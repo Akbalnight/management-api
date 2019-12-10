@@ -58,6 +58,6 @@ public class UsersFilter
 
     public boolean isEmpty()
     {
-        return CollectionUtils.isEmpty(userIds) && CollectionUtils.isEmpty(jsonDataFilters);
+        return userIds == null && CollectionUtils.isEmpty(jsonDataFilters) && isIncludedUsers == null;
     }
 }
