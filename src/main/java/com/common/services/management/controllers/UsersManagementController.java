@@ -11,11 +11,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -63,11 +60,9 @@ public class UsersManagementController
     @PostMapping(value = "/users/filter")
     public List<User> getAllUsersByFilter(
             @RequestBody(required = false) UsersFilter filter,
-            @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size,
-            @RequestParam(required = false) List<String> sort)
+            Pageable pageable)
     {
-        return service.getAllUsers(false, filter, getPageable(page, size, sort));
+        return service.getAllUsers(false, filter, pageable);
     }
 
     @ApiOperation(value = "Получение списка пользователей с их данными")
@@ -77,35 +72,6 @@ public class UsersManagementController
             @RequestParam(value = "with_roles", defaultValue = "false") boolean withRoles)
     {
         return service.getAllUsers(withRoles, null, null);
-    }
-
-    private Pageable getPageable(Integer page, Integer size, List<String> sortParams)
-    {
-        Sort sort = getSort(sortParams);
-        if (page != null && size != null)
-        {
-            return PageRequest.of(page, size, sort);
-        }
-        else
-        {
-            return PageRequest.of(0, 1000, sort);
-        }
-    }
-
-    private Sort getSort(List<String> sortParams)
-    {
-        if (!CollectionUtils.isEmpty(sortParams))
-        {
-            if (sortParams.size() > 1)
-            {
-                return Sort.by(Sort.Direction.fromString(sortParams.get(1)), sortParams.get(0));
-            }
-            else
-            {
-                return Sort.by(sortParams.get(0));
-            }
-        }
-        return Sort.unsorted();
     }
 
     /**
