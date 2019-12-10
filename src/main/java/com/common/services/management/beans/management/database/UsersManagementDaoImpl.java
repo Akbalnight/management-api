@@ -45,6 +45,7 @@ import java.util.*;
 
 import static com.common.services.management.beans.management.service.UsersManagementService.*;
 import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -444,18 +445,9 @@ public class UsersManagementDaoImpl
         String pagination = "";
         if (pageable != null)
         {
-            if(pageable.getSort().isSorted())
+            if (pageable.getSort().isSorted())
             {
-                Sort.Order sortField = pageable.getSort().get().findFirst().get();
-
-                if (sortField.getProperty().equals("username") || sortField.getProperty().equals("user_id"))
-                {
-                    order += " ORDER BY " + sortField.getProperty() + " " + sortField.getDirection();
-                }
-                else
-                {
-                    order += " ORDER BY json_data->>'" + sortField.getProperty() + "' " + sortField.getDirection();
-                }
+                order += String.format(" ORDER BY %s ", toOrderByParametersUsers(pageable.getSort()));
             }
             else
             {
@@ -498,6 +490,25 @@ public class UsersManagementDaoImpl
                 return user;
             }
         });
+    }
+
+    private String toOrderByParametersUsers(Sort sort)
+    {
+        return sort.stream()
+                   .map(order -> toColumnNameUsers(order.getProperty()) + " " + order.getDirection().name())
+                   .collect(joining(", "));
+    }
+
+    private String toColumnNameUsers(String fieldName)
+    {
+        if (fieldName.equals("username") || fieldName.equals("user_id"))
+        {
+            return fieldName;
+        }
+        else
+        {
+            return " json_data->>'" + fieldName + "'";
+        }
     }
 
     /**
