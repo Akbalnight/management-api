@@ -102,6 +102,7 @@ public class UsersManagementDaoImpl
     private static final String ERROR_LDAP_GROUP_WITH_ROLES_EXIST = "error.auth.ldapGroupWithRolesExist";
     private static final String ERROR_ROLE_FROM_LIST_NOT__EXIST = "error.auth.roleFromListNotExist";
     private static final String ERROR_ROLE_LDAP_GROUP_NOT_EXIST = "error.auth.roleLDAPGroupNotExist";
+    private static final String ERROR_GET_USERS_INVALID_FILTER = "error.auth.getUsersInvalidFilter";
 
     /**
      * Объект для генерации исключения
@@ -399,16 +400,27 @@ public class UsersManagementDaoImpl
         if (filter != null && !filter.isEmpty())
         {
             condition = " WHERE 1=1 ";
-            if (!CollectionUtils.isEmpty(filter.getUserIds()))
+            if (filter.getUserIds() != null)
             {
-                params.addValue("userIds", filter.getUserIds());
-                if (filter.getIsIncludedUsers() == null || filter.getIsIncludedUsers())
+                if (filter.getUserIds().size() > 0)
                 {
-                    condition += " AND user_id IN (:userIds) ";
+                    params.addValue("userIds", filter.getUserIds());
+                    if (filter.getIsIncludedUsers() == null || filter.getIsIncludedUsers())
+                    {
+                        condition += " AND user_id IN (:userIds) ";
+                    }
+                    else
+                    {
+                        condition += " AND user_id NOT IN (:userIds) ";
+                    }
                 }
                 else
                 {
-                    condition += " AND user_id NOT IN (:userIds) ";
+                    if (filter.getIsIncludedUsers() == null || filter.getIsIncludedUsers())
+                    {
+                        // вернем пустой список для isIncludedUsers = true и пустого списка userIds
+                        return Collections.emptyList();
+                    }
                 }
             }
 
@@ -418,7 +430,8 @@ public class UsersManagementDaoImpl
                 {
                     if (CollectionUtils.isEmpty(entry.getValue()))
                     {
-                        throw serviceException.applyParameters("Не указаны параметры фильтра для поля jsonData : ", entry.getKey());
+                        throw serviceException.applyParameters(HttpStatus.BAD_REQUEST, ERROR_GET_USERS_INVALID_FILTER
+                                , entry.getKey());
                     }
                     String jsonField = entry.getKey();
                     condition += " AND json_data ->> '" + jsonField + "' IN (:" + jsonField + ")";
