@@ -7,7 +7,7 @@ buildscript {
       	appName = 'management.jar'
 	}
 	repositories {
-        maven { url "https://plugins.gradle.org/m2/" }	
+        maven { url "https://plugins.gradle.org/m2/" }
 		mavenCentral()
 	}
 	dependencies {
@@ -45,20 +45,25 @@ configure(bootJarCustom) {
 
 dependencies {
 	springBoot { buildInfo() }
-    println("AUTH_API_BUILD ${System.getenv("AUTH_API_BUILD")?.toString()}")
     if (System.getenv("AUTH_API_BUILD")?.toBoolean()){
         compile project(":auth-api")
     }
-	implementation('org.springframework.boot:spring-boot-starter-web')
-	runtimeOnly('org.postgresql:postgresql')
+	implementation ('org.springframework.ldap:spring-ldap-core')
+	implementation ('org.springframework.boot:spring-boot-starter-web')
+	implementation ('org.springframework.boot:spring-boot-starter-jdbc')
+	implementation ('org.springframework.security:spring-security-crypto')
+	implementation ('org.springframework.boot:spring-boot-starter-actuator')
+	implementation ('org.springframework.boot:spring-boot-starter-thymeleaf')
+	implementation ('org.springframework.data:spring-data-commons:2.1.4.RELEASE')
+
+	implementation ('com.zaxxer:HikariCP')
+	implementation ('org.postgresql:postgresql:42.2.5')
+
+	// Swagger 2
+	compile ("io.springfox:springfox-swagger2:2.9.2")
+	compile ("io.springfox:springfox-swagger-ui:2.9.2")
+
 	testImplementation('org.springframework.boot:spring-boot-starter-test')
-    compile group: 'io.springfox', name: 'springfox-swagger2', version: '2.9.2'
-    compile group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.9.2'
-	compile('org.springframework.boot:spring-boot-starter-jdbc')
-	compile('org.springframework.boot:spring-boot-starter-thymeleaf')
-	compile('com.zaxxer:HikariCP')
-	compile group: 'org.springframework.security', name: 'spring-security-crypto'
-	compile group: 'org.springframework.data', name: 'spring-data-commons', version: '2.1.4.RELEASE'
-	
-	compile group: 'org.springframework.ldap', name: 'spring-ldap-core'
+
+	println("AUTH_API_BUILD ${System.getenv("AUTH_API_BUILD")?.toString()}")
 }
