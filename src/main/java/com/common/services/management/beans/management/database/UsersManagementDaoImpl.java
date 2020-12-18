@@ -519,10 +519,7 @@ public class UsersManagementDaoImpl
                         concatOrderStringBuilder.append(" json_data->>'").append(splitted[i]).append("'").append(directionName).append(",");
                     }
                 }
-//                for (String s : splitted) {
-//                    concatOrderStringBuilder.append(" json_data->>'").append(s).append("'").append(",");
-//                }
-//                concatOrderStringBuilder.replace(concatOrderStringBuilder.length()-1, concatOrderStringBuilder.length(), "");
+
                 String concatOrderString = concatOrderStringBuilder.toString();
                 return concatOrderString;
             } else {
