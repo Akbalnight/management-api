@@ -499,15 +499,25 @@ public class UsersManagementDaoImpl
                    .collect(joining(", "));
     }
 
-    private String toColumnNameUsers(String fieldName)
-    {
-        if (fieldName.equals("username") || fieldName.equals("user_id"))
-        {
+    private String toColumnNameUsers(String fieldName) {
+        if (fieldName.equals("username") || fieldName.equals("user_id")) {
             return fieldName;
-        }
-        else
-        {
-            return " json_data->>'" + fieldName + "'";
+        } else {
+            if (fieldName.contains(" ")) {
+                String[] splitted = Arrays.stream(fieldName.split(" "))
+                        .map(String::trim)
+                        .toArray(String[]::new);
+
+                StringBuilder concatOrderStringBuilder = new StringBuilder();
+                for (String s : splitted) {
+                    concatOrderStringBuilder.append(" json_data->>'").append(s).append("'").append(",");
+                }
+                concatOrderStringBuilder.replace(concatOrderStringBuilder.length()-1, concatOrderStringBuilder.length(), "");
+                String concatOrderString = concatOrderStringBuilder.toString();
+                return concatOrderString;
+            } else {
+                return " json_data->>'" + fieldName + "'";
+            }
         }
     }
 
