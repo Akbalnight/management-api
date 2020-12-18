@@ -495,11 +495,11 @@ public class UsersManagementDaoImpl
     private String toOrderByParametersUsers(Sort sort)
     {
         return sort.stream()
-                   .map(order -> toColumnNameUsers(order.getProperty()) + " " + order.getDirection().name())
+                   .map(order -> toColumnNameUsers(order.getProperty(), order.getDirection().name()) + " " + order.getDirection().name())
                    .collect(joining(", "));
     }
 
-    private String toColumnNameUsers(String fieldName) {
+    private String toColumnNameUsers(String fieldName, String directionName) {
         if (fieldName.equals("username") || fieldName.equals("user_id")) {
             return fieldName;
         } else {
@@ -509,10 +509,20 @@ public class UsersManagementDaoImpl
                         .toArray(String[]::new);
 
                 StringBuilder concatOrderStringBuilder = new StringBuilder();
-                for (String s : splitted) {
-                    concatOrderStringBuilder.append(" json_data->>'").append(s).append("'").append(",");
+
+                String x;
+                System.out.println(splitted.length);
+                for (int i = 0; i < splitted.length; i++) {
+                    if (i == splitted.length-1) {
+                        concatOrderStringBuilder.append(" json_data->>'").append(splitted[i]).append("'");
+                    } else {
+                        concatOrderStringBuilder.append(" json_data->>'").append(splitted[i]).append("'").append(directionName).append(",");
+                    }
                 }
-                concatOrderStringBuilder.replace(concatOrderStringBuilder.length()-1, concatOrderStringBuilder.length(), "");
+//                for (String s : splitted) {
+//                    concatOrderStringBuilder.append(" json_data->>'").append(s).append("'").append(",");
+//                }
+//                concatOrderStringBuilder.replace(concatOrderStringBuilder.length()-1, concatOrderStringBuilder.length(), "");
                 String concatOrderString = concatOrderStringBuilder.toString();
                 return concatOrderString;
             } else {
@@ -825,7 +835,7 @@ public class UsersManagementDaoImpl
         {
             logger.error(e);
         }
-        
+
         try
         {
             final String SQL_ADD_PERMISSION = "INSERT INTO permissions(description,path,method,json_data) VALUES " +
