@@ -155,7 +155,7 @@ public class AuditDaoImpl
             "and  (userid = :" + selectParameters.get(USERID).getParam() + " or 1 = :" + selectParameters.get(USERID).getParamSign() + ") " +
             "and  (data->'requestJson'->>'method' = :" + selectParameters.get(METHOD).getParam() + " or 1 = :" + selectParameters.get(METHOD).getParamSign() + ") " +
             "and  (data->'requestJson'->>'path' like :" + selectParameters.get(PATH).getParam() + " or 1 = :" + selectParameters.get(PATH).getParamSign() + ") " +
-            "and  (cast(data->>'code' as integer) = any(regexp_split_to_array(:" + selectParameters.get(STATUS).getParam() + ",',')::int[]) or 1 = :" + selectParameters.get(STATUS).getParamSign() + ")" +
+            "and  (cast(data->>'code' as integer) = any(regexp_split_to_array(NULLIF(:" + selectParameters.get(STATUS).getParam() + ",''),',')::int[]) or 1 = :" + selectParameters.get(STATUS).getParamSign() + ")" +
             ") " +
             "order by timereq " +
             "limit %d offset %d";
@@ -171,7 +171,7 @@ public class AuditDaoImpl
             "and  (userid = :" + selectParameters.get(USERID).getParam() + " or 1 = :" + selectParameters.get(USERID).getParamSign() + ") " +
             "and  (data->'requestJson'->>'method' = :" + selectParameters.get(METHOD).getParam() + " or 1 = :" + selectParameters.get(METHOD).getParamSign() + ") " +
             "and  (data->'requestJson'->>'path' like :" + selectParameters.get(PATH).getParam() + " or 1 = :" + selectParameters.get(PATH).getParamSign() + ") " +
-            "and  (cast(data->>'code' as integer) = any(regexp_split_to_array(:" + selectParameters.get(STATUS).getParam() + ",',')::int[]) or 1 = :" + selectParameters.get(STATUS).getParamSign() + ")" +
+            "and  (cast(data->>'code' as integer) = any(regexp_split_to_array(NULLIF(:" + selectParameters.get(STATUS).getParam() + ",''),',')::int[]) or 1 = :" + selectParameters.get(STATUS).getParamSign() + ")" +
             ")";
 
     public static final String SQL_SELECT_ACTIVE_USERS = "select "
